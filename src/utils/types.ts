@@ -29,7 +29,7 @@ export interface ContentRating {
 // Post Types
 export interface Post {
   id: string;
-  platform: 'twitter' | 'facebook' | 'reddit';
+  platform: 'twitter' | 'facebook' | 'reddit' | 'linkedin';
   content: string;
   author: string;
   timestamp: number;
@@ -73,4 +73,5 @@ export interface StorageData {
   modelSettings: ModelSettings;
   cachedRatings: { [postId: string]: ContentRating };
   userFeedback: { [postId: string]: number };
+  isInitialized: boolean;  // Track if extension has completed initial setup
 }

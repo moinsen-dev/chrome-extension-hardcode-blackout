@@ -1,49 +1,6 @@
+/// <reference types="chrome"/>
 import { ContentRating, Post, StorageData } from '../utils/types';
-
-// Temporary mock rating function until we integrate Llama
-function mockRateContent(post: Post): ContentRating {
-  // Generate somewhat random but consistent ratings for testing
-  const hash = Array.from(post.content).reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
-
-  const normalizeScore = (n: number): number => Math.min(10, Math.max(0, Math.abs(Math.sin(n)) * 10));
-
-  const contentQuality = {
-    writingQuality: normalizeScore(hash * 0.1),
-    informationDensity: normalizeScore(hash * 0.2),
-    sourceCredibility: normalizeScore(hash * 0.3),
-    originality: normalizeScore(hash * 0.4)
-  };
-
-  const emotionalImpact = {
-    toxicityLevel: normalizeScore(hash * 0.5),
-    emotionalManipulation: normalizeScore(hash * 0.6),
-    socialHarmony: normalizeScore(hash * 0.7)
-  };
-
-  const userPreferences = {
-    topicAlignment: normalizeScore(hash * 0.8),
-    sourcePreference: normalizeScore(hash * 0.9),
-    historicalInteraction: normalizeScore(hash * 1.0)
-  };
-
-  // Calculate overall score (0-100)
-  const overallScore = Math.round(
-    (Object.values(contentQuality).reduce((a, b) => a + b) * 4 +
-     Object.values(emotionalImpact).reduce((a, b) => a + b) * 3 +
-     Object.values(userPreferences).reduce((a, b) => a + b) * 3
-    ) / 10
-  );
-
-  return {
-    overallScore,
-    contentQuality,
-    emotionalImpact,
-    userPreferences,
-    timestamp: Date.now()
-  };
-}
+import { llamaService } from './llama-service';
 
 // Initialize default settings
 async function initializeStorage() {
@@ -59,7 +16,7 @@ async function initializeStorage() {
       }
     },
     modelSettings: {
-      modelPath: '',
+      modelPath: 'models/small.gguf',
       modelType: 'default',
       inferenceSettings: {
         maxTokens: 100,
@@ -68,40 +25,218 @@ async function initializeStorage() {
       }
     },
     cachedRatings: {},
-    userFeedback: {}
+    userFeedback: {},
+    isInitialized: false  // Track if extension has been set up
   };
 
-  const storage = await chrome.storage.local.get('settings');
-  if (!storage.settings) {
-    await chrome.storage.local.set({ settings: defaultSettings });
+  try {
+    // Get existing storage data
+    const storage = await chrome.storage.local.get('settings') as { settings?: StorageData };
+
+    // If no settings exist or not initialized, set defaults and show setup
+    if (!storage.settings || !storage.settings.isInitialized) {
+      await chrome.storage.local.set({ settings: defaultSettings });
+      // Open setup page
+      await showSetupPage();
+      return;
+    }
+
+    // If already initialized, proceed with normal startup
+    await initializeLlamaService(storage.settings.modelSettings);
+  } catch (error) {
+    console.error('Failed to initialize storage:', error);
+    await showSetupPage();
+  }
+}
+
+// Show the setup page
+async function showSetupPage() {
+  // Create setup tab
+  const setupUrl = chrome.runtime.getURL('options.html?setup=true');
+  await chrome.tabs.create({ url: setupUrl });
+}
+
+// Initialize Llama service with settings
+async function initializeLlamaService(modelSettings: StorageData['modelSettings']) {
+  try {
+    await llamaService.initialize(modelSettings);
+    console.log('Llama service initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Llama service:', error);
+    // Show setup page if initialization fails
+    await showSetupPage();
+  }
+}
+
+// Create a fallback rating when Llama service fails
+function createFallbackRating(): ContentRating {
+  return {
+    overallScore: 50,
+    contentQuality: {
+      writingQuality: 5,
+      informationDensity: 5,
+      sourceCredibility: 5,
+      originality: 5
+    },
+    emotionalImpact: {
+      toxicityLevel: 5,
+      emotionalManipulation: 5,
+      socialHarmony: 5
+    },
+    userPreferences: {
+      topicAlignment: 5,
+      sourcePreference: 5,
+      historicalInteraction: 5
+    },
+    timestamp: Date.now()
+  };
+}
+
+// Download progress handler
+async function downloadModel(modelType: string) {
+  try {
+    const modelUrls = {
+      'fast': 'https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v0.3-GGUF/resolve/main/tinyllama-1.1b-chat-v0.3.Q4_K_M.gguf',
+      'default': 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf',
+      'accurate': 'https://huggingface.co/TheBloke/Llama-2-13B-chat-GGUF/resolve/main/llama-2-13b-chat.Q4_K_M.gguf'
+    };
+
+    const url = modelUrls[modelType as keyof typeof modelUrls];
+    if (!url) throw new Error('Invalid model type');
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Network response was not ok');
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Failed to get response reader');
+
+    const contentLength = Number(response.headers.get('Content-Length')) || 0;
+    let receivedLength = 0;
+    let result = await reader.read();
+
+    while (!result.done) {
+      receivedLength += result.value.length;
+      const progress = (receivedLength / contentLength) * 100;
+
+      // Send progress message
+      chrome.runtime.sendMessage({
+        type: 'DOWNLOAD_PROGRESS',
+        modelType,
+        progress
+      });
+
+      // TODO: Save chunks to IndexedDB or other storage
+      result = await reader.read();
+    }
+
+    // Send completion message
+    chrome.runtime.sendMessage({
+      type: 'DOWNLOAD_COMPLETE',
+      modelType
+    });
+
+  } catch (error: unknown) {
+    console.error('Failed to download model:', error);
+    chrome.runtime.sendMessage({
+      type: 'DOWNLOAD_ERROR',
+      modelType,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    });
   }
 }
 
 // Message handling
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'REQUEST_RATING') {
-    const post: Post = message.post;
-
-    // Check cache first
-    chrome.storage.local.get(['cachedRatings'], async (result) => {
-      const cachedRatings = result.cachedRatings || {};
-
-      if (cachedRatings[post.id]) {
-        sendResponse({ rating: cachedRatings[post.id] });
-      } else {
-        // Generate rating (mock for now)
-        const rating = mockRateContent(post);
-
-        // Cache the rating
-        cachedRatings[post.id] = rating;
-        await chrome.storage.local.set({ cachedRatings });
-
-        sendResponse({ rating: rating.overallScore });
+chrome.runtime.onMessage.addListener(
+  (
+    message: { type: string; modelType?: string; post?: Post },
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: any) => void
+  ) => {
+    if (message.type === 'REQUEST_RATING') {
+      if (!message.post) {
+        console.error('No post data provided');
+        return true;
       }
-    });
+      const post: Post = message.post;
 
-    // Keep the message channel open for async response
+      // Check cache first
+      chrome.storage.local.get(['cachedRatings', 'settings'], async (result) => {
+        const cachedRatings = result.cachedRatings || {};
+        const settings = result.settings;
+
+        // If not initialized, return fallback rating
+        if (!settings?.isInitialized) {
+          sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+          return;
+        }
+
+        if (cachedRatings[post.id]) {
+          sendResponse({ rating: cachedRatings[post.id].overallScore });
+        } else {
+          try {
+            // Generate rating using Llama
+            const rating = await llamaService.analyzeContent(post);
+
+            // Cache the rating
+            cachedRatings[post.id] = rating;
+            await chrome.storage.local.set({ cachedRatings });
+
+            sendResponse({ rating: rating.overallScore });
+          } catch (error) {
+            console.error('Error analyzing content:', error);
+            // Use fallback rating instead of failing
+            const fallbackRating = createFallbackRating();
+            sendResponse({ rating: fallbackRating.overallScore, fallback: true });
+          }
+        }
+      });
+
+      return true;
+    }
+
+    // Handle setup completion
+    if (message.type === 'SETUP_COMPLETE') {
+      (async () => {
+        try {
+          const { settings } = await chrome.storage.local.get('settings');
+          if (settings) {
+            // Initialize the Llama service with the saved settings
+            await initializeLlamaService(settings.modelSettings);
+            console.log('Setup completed successfully');
+          }
+        } catch (error) {
+          console.error('Failed to complete setup:', error);
+          await showSetupPage();
+        }
+      })();
+      return true;
+    }
+
+    if (message.type === 'DOWNLOAD_MODEL' && message.modelType) {
+      downloadModel(message.modelType);
+      return true;
+    }
+
     return true;
+  }
+);
+
+// Handle settings changes
+chrome.storage.onChanged.addListener(async (changes) => {
+  if (changes.settings?.newValue?.modelSettings) {
+    const settings = changes.settings.newValue;
+    // Only update if initialization is complete
+    if (settings.isInitialized) {
+      try {
+        await llamaService.unloadModel();
+        await llamaService.initialize(settings.modelSettings);
+        console.log('Model settings updated successfully');
+      } catch (error) {
+        console.error('Failed to update model settings:', error);
+        // Show setup page if update fails
+        await showSetupPage();
+      }
+    }
   }
 });
 

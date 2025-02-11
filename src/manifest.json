@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Hardcore Blackout",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A sophisticated Chrome extension for content filtering with local AI processing",
   "permissions": ["storage", "history", "webNavigation", "scripting"],
   "host_permissions": [
     "*://*.twitter.com/*",
     "*://*.facebook.com/*",
-    "*://*.reddit.com/*"
+    "*://*.reddit.com/*",
+    "*://*.linkedin.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -17,10 +18,17 @@
       "matches": [
         "*://*.twitter.com/*",
         "*://*.facebook.com/*",
-        "*://*.reddit.com/*"
+        "*://*.reddit.com/*",
+        "*://*.linkedin.com/*"
       ],
       "js": ["content.js"],
       "css": ["styles.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["llama.worker.js", "llama.wasm"],
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {

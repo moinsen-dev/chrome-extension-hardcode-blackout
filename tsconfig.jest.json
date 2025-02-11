@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "chrome", "node", "@testing-library/jest-dom"],
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "module": "es2022",
+    "moduleResolution": "node",
+    "target": "es2022"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/__tests__/**/*.ts",
+    "src/__tests__/**/*.tsx",
+    "e2e/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -63,34 +63,240 @@ A sophisticated Chrome extension that helps you take control of your social medi
 
 ## Getting Started
 
+### Prerequisites
+
+Before you begin, ensure you have the following tools installed:
+
+1. **Node.js and npm**
+   - Download and install from [nodejs.org](https://nodejs.org/)
+   - Required version: 16.x or higher
+
+2. **CMake**
+   - macOS: `brew install cmake`
+   - Linux: `sudo apt-get install cmake`
+   - Windows: Download installer from [cmake.org](https://cmake.org/download/)
+   - Required version: 3.13 or higher
+
+3. **Emscripten**
+   - Install using the following commands:
+   ```bash
+   git clone https://github.com/emscripten-core/emsdk.git
+   cd emsdk
+   ./emsdk install latest
+   ./emsdk activate latest
+   source ./emsdk_env.sh  # On Windows, use: emsdk_env.bat
+   ```
+   - Add to your PATH as instructed by the installer
+   - Required version: 3.1.45 or higher
+
+4. **Git**
+   - macOS: `brew install git`
+   - Linux: `sudo apt-get install git`
+   - Windows: Download from [git-scm.com](https://git-scm.com/)
+
 ### Installation
+
 1. Clone the repository
-\`\`\`bash
+```bash
 git clone https://github.com/yourusername/chrome-extension-hardcode-blackout.git
 cd chrome-extension-hardcode-blackout
-\`\`\`
+```
 
 2. Install dependencies
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
-3. Build the extension
-\`\`\`bash
+3. Prepare the Llama model and WASM build
+```bash
+npm run prepare-model
+```
+This script will:
+- Clone and build llama.cpp with WASM support
+- Download the required model files
+- Set up the WASM integration
+
+4. Build the extension
+```bash
 npm run build
-\`\`\`
+```
 
-4. Load in Chrome
-- Open Chrome and go to \`chrome://extensions/\`
+5. Load in Chrome
+- Open Chrome and go to `chrome://extensions/`
 - Enable Developer mode
 - Click "Load unpacked"
-- Select the \`dist\` directory
+- Select the `dist` directory
 
-### Development
-- Run in watch mode:
-\`\`\`bash
+## Development
+
+### Local Development Setup
+
+1. **Start Development Server**
+```bash
 npm run dev
-\`\`\`
+```
+This will:
+- Start Webpack in watch mode
+- Rebuild on file changes
+- Enable source maps for debugging
+
+2. **Enable Chrome DevTools**
+- Right-click the extension icon
+- Click "Inspect popup"
+- Use the Console and Network tabs for debugging
+
+3. **Live Reload**
+- Changes to content scripts require extension reload
+- Click the refresh icon in `chrome://extensions/`
+- Or use Chrome's Extensions Reloader extension
+
+4. **Debug Logging**
+- Set `DEBUG=true` in your `.env` file
+- View logs in the background script console
+- Access via `chrome://extensions/` -> Inspect views
+
+### Testing
+
+The project includes comprehensive testing at multiple levels:
+
+#### 1. Unit Tests
+Test individual components and services:
+```bash
+# Run all unit tests
+npm run test:unit
+
+# Run specific test file
+npm run test:unit -- llama-service.test.ts
+
+# Watch mode for development
+npm run test:unit -- --watch
+```
+
+#### 2. Integration Tests
+Test component interactions and DOM manipulation:
+```bash
+# Run all integration tests
+npm run test:integration
+
+# Run with coverage
+npm run test:integration -- --coverage
+```
+
+#### 3. End-to-End Tests
+Test the extension in a real browser environment:
+```bash
+# Install Playwright browsers
+npx playwright install
+
+# Run all E2E tests
+npm run test:e2e
+
+# Run specific browser tests
+npm run test:e2e -- --project=chromium
+
+# Show test report
+npx playwright show-report
+```
+
+#### Test Coverage
+Generate and view test coverage reports:
+```bash
+# Generate coverage report
+npm run test:coverage
+
+# Open coverage report
+open coverage/lcov-report/index.html
+```
+
+### Common Testing Scenarios
+
+1. **Content Processing**
+   - Post detection and analysis
+   - Rating calculation
+   - Visual overlay rendering
+
+2. **UI Components**
+   - Popup functionality
+   - Settings page interactions
+   - Dark/light theme switching
+
+3. **Model Integration**
+   - WASM module loading
+   - Model inference
+   - Performance benchmarks
+
+4. **Browser Integration**
+   - Extension installation
+   - Chrome API interactions
+   - Cross-platform compatibility
+
+### Debugging Tests
+
+1. **Jest Tests**
+```bash
+# Run with detailed logging
+npm run test -- --verbose
+
+# Debug specific test
+node --inspect-brk node_modules/.bin/jest --runInBand path/to/test
+```
+
+2. **Playwright Tests**
+```bash
+# Run in debug mode
+npm run test:e2e -- --debug
+
+# Run with UI mode
+npm run test:e2e -- --ui
+```
+
+3. **Common Issues**
+- **WASM Loading**: Ensure proper path resolution in tests
+- **Chrome API Mocks**: Verify mock implementation matches real behavior
+- **Async Operations**: Use proper wait and timeout values
+- **DOM Events**: Ensure proper event simulation and cleanup
+
+### Code Quality
+
+1. **Type Checking**
+```bash
+npm run type-check
+```
+
+2. **Linting**
+```bash
+# Run linter
+npm run lint
+
+# Fix auto-fixable issues
+npm run lint -- --fix
+```
+
+3. **Pre-commit Hooks**
+- Tests must pass
+- No TypeScript errors
+- No linting errors
+- Coverage thresholds met
+
+### Best Practices
+
+1. **Writing Tests**
+   - Follow AAA pattern (Arrange, Act, Assert)
+   - Use meaningful test descriptions
+   - Keep tests focused and isolated
+   - Clean up after each test
+
+2. **Mocking**
+   - Mock external dependencies
+   - Use jest.spyOn for verification
+   - Reset mocks between tests
+   - Document mock behavior
+
+3. **Performance**
+   - Group related tests
+   - Reuse setup when possible
+   - Mock heavy operations
+   - Use snapshot testing wisely
 
 ## Usage
 
