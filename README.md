@@ -1,7 +1,140 @@
+# Hardcore Blackout
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18.0.0-blue.svg)](https://reactjs.org/)
+[![MUI](https://img.shields.io/badge/MUI-5.0.0-blue.svg)](https://mui.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chrome.google.com/webstore)
+[![Local AI](https://img.shields.io/badge/AI-Local_Processing-orange.svg)](https://github.com/ggerganov/llama.cpp)
+
+A sophisticated Chrome extension that helps you take control of your social media experience through advanced content filtering and rating, powered by local AI processing.
+
+![Hardcore Blackout](hardcore-blocker.jpeg)
+
+## Features
+
+### 🎯 Smart Content Rating
+- Real-time content analysis using local LLama models
+- 0-100 rating scale with visual indicators
+- Comprehensive rating components:
+  - Content Quality (40%)
+  - Emotional Impact (30%)
+  - User Preferences (30%)
+
+### 🛡️ Content Filtering
+- Platform-specific content detection
+- Customizable filtering thresholds
+- Visual feedback through color-coded ratings
+- Quick actions: Hide/Block content
+
+### 🔒 Privacy First
+- All processing happens locally on your device
+- No data sent to external servers
+- Local LLama model integration
+- Complete control over AI model selection
+
+### ⚡ Performance
+- Efficient post detection and processing
+- Background worker for AI processing
+- Smart caching system
+- Minimal impact on browsing experience
+
+### 🎨 Modern UI
+- Clean, intuitive interface
+- Dark mode support
+- Material Design components
+- Responsive overlays and popups
+
+## Implementation
+
+### Current Status
+- ✅ Basic extension structure
+- ✅ TypeScript/React setup
+- ✅ Post detection system
+- ✅ Rating overlay UI
+- ✅ Settings management
+- 🔄 Local AI integration (in progress)
+
+### Tech Stack
+- **Frontend**: React, TypeScript, Material-UI
+- **Styling**: TailwindCSS
+- **AI**: Local Llama.cpp via WebAssembly
+- **Build**: Webpack, PostCSS
+
+## Getting Started
+
+### Installation
+1. Clone the repository
+\`\`\`bash
+git clone https://github.com/yourusername/chrome-extension-hardcode-blackout.git
+cd chrome-extension-hardcode-blackout
+\`\`\`
+
+2. Install dependencies
+\`\`\`bash
+npm install
+\`\`\`
+
+3. Build the extension
+\`\`\`bash
+npm run build
+\`\`\`
+
+4. Load in Chrome
+- Open Chrome and go to \`chrome://extensions/\`
+- Enable Developer mode
+- Click "Load unpacked"
+- Select the \`dist\` directory
+
+### Development
+- Run in watch mode:
+\`\`\`bash
+npm run dev
+\`\`\`
+
+## Usage
+
+### Basic Configuration
+1. Click the extension icon to open the popup
+2. Use the quick settings for basic filtering
+3. Open the full settings page for detailed configuration
+
+### AI Model Setup
+1. Select your preferred Llama model
+2. Configure inference settings
+3. Adjust processing parameters
+
+### Content Filtering
+- Posts are automatically rated (0-100)
+- Color-coded indicators show content quality
+- Use quick actions to hide or block content
+- Customize thresholds in settings
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Process
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Llama.cpp](https://github.com/ggerganov/llama.cpp) for the WebAssembly integration
+- [Material-UI](https://mui.com/) for the UI components
+- The open-source community for inspiration and support
+
 **Feature Specification: Hardcore Blackout**
 
 ### **1. Overview**
-Hardcore Blackout constitutes a sophisticated Chrome extension meticulously engineered to regulate social media content exposure through an advanced filtration paradigm. This solution leverages a hybrid architecture integrating deterministic keyword filtering with probabilistic AI-driven content analysis to grant users unparalleled control over the digital landscape. The platform facilitates a multi-tiered approach wherein users may dictate precise content filtration rules, employ OpenAI’s advanced natural language processing models, or opt for entirely local AI-driven inference mechanisms via frameworks such as Ullama, ensuring privacy-centric computation. Additionally, the extension incorporates a robust browsing history sanitation module, expediting the automated removal of undesired entries predicated upon user-defined heuristics. This project, maintained as an open-source initiative, resides in a public GitHub repository and adheres to the permissive MIT License, fostering community-driven contributions and iterative enhancements.
+Hardcore Blackout constitutes a sophisticated Chrome extension meticulously engineered to regulate social media content exposure through an advanced filtration paradigm. This solution leverages a hybrid architecture integrating deterministic keyword filtering with probabilistic AI-driven content analysis to grant users unparalleled control over the digital landscape. The platform facilitates a multi-tiered approach wherein users may dictate precise content filtration rules, employ OpenAI's advanced natural language processing models, or opt for entirely local AI-driven inference mechanisms via frameworks such as Ullama, ensuring privacy-centric computation. Additionally, the extension incorporates a robust browsing history sanitation module, expediting the automated removal of undesired entries predicated upon user-defined heuristics. This project, maintained as an open-source initiative, resides in a public GitHub repository and adheres to the permissive MIT License, fostering community-driven contributions and iterative enhancements.
 
 ### **2. Core Features**
 

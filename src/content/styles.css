@@ -1,0 +1,119 @@
+.blackout-rating-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.blackout-rating {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 80px;
+  backdrop-filter: blur(4px);
+}
+
+.blackout-score {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* Score color classes */
+.score-80 {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.score-60 {
+  background-color: #8BC34A;
+  color: white;
+}
+
+.score-40 {
+  background-color: #FFC107;
+  color: black;
+}
+
+.score-20 {
+  background-color: #FF9800;
+  color: white;
+}
+
+.score-0 {
+  background-color: #F44336;
+  color: white;
+}
+
+.blackout-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.blackout-actions button {
+  flex: 1;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.blackout-hide {
+  background-color: #E0E0E0;
+}
+
+.blackout-block {
+  background-color: #F44336;
+  color: white;
+}
+
+.blackout-hide:hover {
+  background-color: #BDBDBD;
+}
+
+.blackout-block:hover {
+  background-color: #D32F2F;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .blackout-rating {
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+  }
+
+  .blackout-hide {
+    background-color: #424242;
+    color: white;
+  }
+
+  .blackout-hide:hover {
+    background-color: #616161;
+  }
+}
+
+/* Animation for overlay appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blackout-rating-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
