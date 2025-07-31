@@ -47,7 +47,11 @@ async function initializeStorage() {
         emotionalImpact: 0.3,
         userPreferences: 0.3
       },
-      defaultViewMode: 'condensed'  // Default to condensed view
+      defaultViewMode: 'condensed',  // Default to condensed view
+      userPrompt: '',  // Empty by default, user can customize
+      interestKeywords: [],  // Empty by default
+      avoidKeywords: [],  // Empty by default
+      preferOriginalContent: true  // Default to preferring original content
     },
     modelSettings: {
       modelPath: 'models/default.gguf',
@@ -200,7 +204,9 @@ function createFallbackRating(): ContentRating {
       category,
       confidence: Math.random() * 0.3 + 0.7 // 0.7 to 1.0 confidence
     },
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    isAIGenerated: Math.random() < 0.2, // 20% chance of being AI-generated in fallback
+    aiConfidence: Math.random() * 0.5 + 0.3 // 0.3 to 0.8 confidence
   };
 }
 
@@ -260,6 +266,8 @@ chrome.runtime.onMessage.addListener(
                 rating: cachedRating.overallScore, 
                 contentType: cachedRating.contentType,
                 debugInfo: (cachedRating as any).debugInfo,
+                isAIGenerated: cachedRating.isAIGenerated,
+                aiConfidence: cachedRating.aiConfidence,
                 cached: true 
               });
               return;
@@ -280,7 +288,7 @@ chrome.runtime.onMessage.addListener(
               const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
               
               // Add timeout to prevent hanging requests
-              const analysisPromise = ollamaService.analyzeContent(post, modelName);
+              const analysisPromise = ollamaService.analyzeContent(post, modelName, settings?.settings);
               const timeoutPromise = new Promise<never>((_, reject) => {
                 setTimeout(() => reject(new Error('Ollama request timeout')), 30000); // 30 second timeout
               });
@@ -320,7 +328,9 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ 
               rating: rating.overallScore,
               contentType: rating.contentType,
-              debugInfo: (rating as any).debugInfo
+              debugInfo: (rating as any).debugInfo,
+              isAIGenerated: rating.isAIGenerated,
+              aiConfidence: rating.aiConfidence
             });
           } catch (error) {
             console.error('Error analyzing content:', error);
@@ -340,6 +350,8 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ 
               rating: fallbackRating.overallScore, 
               contentType: fallbackRating.contentType,
+              isAIGenerated: fallbackRating.isAIGenerated,
+              aiConfidence: fallbackRating.aiConfidence,
               fallback: true,
               error: error instanceof Error ? error.message : String(error)
             });

@@ -3,16 +3,11 @@ import {
     Button,
     Card,
     CardContent,
-    CircularProgress,
     Container,
-    Dialog,
-    DialogContent,
-    DialogTitle,
     FormControl,
     FormControlLabel,
     Grid,
     InputLabel,
-    LinearProgress,
     MenuItem,
     Paper,
     Radio,
@@ -27,8 +22,10 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TextField,
     Tooltip,
-    Typography
+    Typography,
+    Switch
 } from '@mui/material';
 import {
     Shield as ShieldIcon,
@@ -165,7 +162,7 @@ const Options: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
-    const handleSettingChange = (key: string, value: number | string) => {
+    const handleSettingChange = (key: string, value: number | string | boolean | string[]) => {
         if (!settings) return;
 
         const newSettings = {
@@ -496,6 +493,79 @@ const Options: React.FC = () => {
                             </RadioGroup>
                             <Typography variant="body2" color="text.secondary" mt={1}>
                                 Condensed view shows only the score and category icon. Click the toggle button to expand.
+                            </Typography>
+                        </Box>
+                    </Paper>
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>Content Preferences</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                            Customize how the AI evaluates content based on your interests
+                        </Typography>
+
+                        <Box sx={{ mb: 3 }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={3}
+                                label="Your Content Preferences"
+                                value={settings.userPrompt || ''}
+                                onChange={(e) => handleSettingChange('userPrompt', e.target.value)}
+                                placeholder="Example: I&apos;m interested in cutting-edge technology, AI research, and software architecture. I prefer technical depth over surface-level coverage."
+                                helperText="Describe what kind of content you find valuable. This helps the AI better align ratings with your interests."
+                            />
+                        </Box>
+
+                        <Box sx={{ mb: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Topics of Interest"
+                                value={settings.interestKeywords?.join(', ') || ''}
+                                onChange={(e) => {
+                                    const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+                                    handleSettingChange('interestKeywords', keywords);
+                                }}
+                                placeholder="AI, machine learning, software architecture, data science"
+                                helperText="Comma-separated keywords for topics you're interested in"
+                            />
+                        </Box>
+
+                        <Box sx={{ mb: 3 }}>
+                            <TextField
+                                fullWidth
+                                label="Topics to Avoid"
+                                value={settings.avoidKeywords?.join(', ') || ''}
+                                onChange={(e) => {
+                                    const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+                                    handleSettingChange('avoidKeywords', keywords);
+                                }}
+                                placeholder="politics, gossip, motivational quotes"
+                                helperText="Comma-separated keywords for topics you want to avoid"
+                            />
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box>
+                                <Typography gutterBottom>Prefer Original Content</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Prioritize original insights over reshared content
+                                </Typography>
+                            </Box>
+                            <Switch
+                                checked={settings.preferOriginalContent ?? true}
+                                onChange={(e) => handleSettingChange('preferOriginalContent', e.target.checked)}
+                            />
+                        </Box>
+
+                        <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                            <Typography variant="subtitle2" gutterBottom>Example Preference Templates:</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                <strong>For Tech Enthusiasts:</strong> &quot;Focus on original research and data-driven insights. Prioritize content about emerging technologies, software architecture, and AI. Avoid motivational posts and reshared news.&quot;
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                <strong>For Business Professionals:</strong> &quot;I value strategic insights, market analysis, and leadership perspectives. Prefer content with actionable takeaways over theoretical discussions.&quot;
                             </Typography>
                         </Box>
                     </Paper>

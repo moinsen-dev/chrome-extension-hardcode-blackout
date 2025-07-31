@@ -576,7 +576,7 @@ class OllamaService {
     isOllamaAvailable() {
         return this.isAvailable;
     }
-    async analyzeContent(post, modelName = 'llama3.2') {
+    async analyzeContent(post, modelName = 'llama3.2', userSettings) {
         if (!this.isAvailable) {
             const error = new Error('Ollama service is not available');
             await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logError('ollama-service', 'analyze-content', error, 'high', {
@@ -587,7 +587,7 @@ class OllamaService {
             });
             throw error;
         }
-        const prompt = this.createAnalysisPrompt(post);
+        const prompt = this.createAnalysisPrompt(post, userSettings);
         try {
             // Use Chrome extension compatible fetch for localhost
             const requestBody = {
@@ -603,6 +603,38 @@ Rate each aspect on a scale of 1-10:
 - Content Quality (writingQuality, informationDensity, sourceCredibility, originality)
 - Emotional Impact (toxicityLevel, emotionalManipulation, socialHarmony)
 - User Preferences (topicAlignment, sourcePreference, historicalInteraction)
+
+RATING METRICS EXPLAINED:
+- writingQuality: Clarity, structure, grammar, and coherence of the content
+- informationDensity: Amount of useful, substantive information per word
+- sourceCredibility: Author expertise, reliability, and trustworthiness
+- originality: New insights and original thought vs. recycled/reshared content
+- topicAlignment: How well content matches user's stated interests
+- sourcePreference: Whether author/source is preferred by user
+- historicalInteraction: Similarity to previously engaged content
+
+ORIGINALITY SCORING GUIDE (1-10):
+- 10: Completely original research, analysis, or groundbreaking insights
+- 8-9: Original perspective or unique take on existing topics
+- 6-7: Curated content with meaningful personal insights added
+- 4-5: Simple reshare with minimal commentary (e.g., "Great post by X")
+- 2-3: Copy-paste or "look what X posted" type content
+- 1: Pure repost with no added value
+
+AI-GENERATED CONTENT DETECTION:
+Analyze the content for signs of AI generation. Look for:
+- Overly polished, formulaic writing style
+- Generic, templated structure (e.g., "In today's digital age...")
+- Excessive use of transitional phrases and formal language
+- Lack of personal anecdotes or specific experiences
+- Uniform paragraph structure and sentence length
+- Overuse of lists and bullet points in a mechanical way
+- Generic examples without specific details
+- Hedging language and lack of strong opinions
+- Perfect grammar but lacking authentic voice
+- Common AI phrases: "it's important to note", "in conclusion", "furthermore", "additionally"
+
+If content appears AI-generated, this should SIGNIFICANTLY impact the originality score (max 3/10).
 
 CONTENT CLASSIFICATION GUIDE (apply to any language):
 - personal: Personal stories, life updates, emotional experiences, opinions, casual conversations
@@ -660,7 +692,9 @@ Respond ONLY with valid JSON in this exact format:
   "contentType": {
     "category": "business",
     "confidence": 0.85
-  }
+  },
+  "isAIGenerated": false,
+  "aiConfidence": 0.2
 }`
             };
             // Chrome extension compatible fetch - no explicit timeout needed as Chrome handles it
@@ -711,7 +745,7 @@ Respond ONLY with valid JSON in this exact format:
             throw error;
         }
     }
-    createAnalysisPrompt(post) {
+    createAnalysisPrompt(post, userSettings) {
         const contextInfo = [];
         // Add title if available
         if (post.title) {
@@ -762,7 +796,22 @@ Respond ONLY with valid JSON in this exact format:
                 contextInfo.push(`Platform Signals: ${hints.join(', ')}`);
             }
         }
-        return `Analyze this social media post and provide comprehensive ratings. You must determine ALL classification aspects from the content itself, including whether it's sponsored, promotional, or commercial.
+        // Add user preferences if provided
+        if (userSettings) {
+            if (userSettings.userPrompt) {
+                contextInfo.push(`User Content Preferences: ${userSettings.userPrompt}`);
+            }
+            if (userSettings.interestKeywords && userSettings.interestKeywords.length > 0) {
+                contextInfo.push(`Topics of Interest: ${userSettings.interestKeywords.join(', ')}`);
+            }
+            if (userSettings.avoidKeywords && userSettings.avoidKeywords.length > 0) {
+                contextInfo.push(`Topics to Avoid: ${userSettings.avoidKeywords.join(', ')}`);
+            }
+            if (userSettings.preferOriginalContent !== undefined) {
+                contextInfo.push(`Original Content Preference: ${userSettings.preferOriginalContent ? 'Strongly prefer original content' : 'No strong preference for original content'}`);
+            }
+        }
+        return `Analyze this social media post and provide comprehensive ratings. Consider the user's stated preferences when evaluating topicAlignment and overall value.
 
 Content: "${post.content}"
 Author: ${post.author}
@@ -770,13 +819,23 @@ Platform: ${post.platform}
 ${contextInfo.length > 0 ? '\nAdditional Context:\n' + contextInfo.map(info => `- ${info}`).join('\n') : ''}
 
 Your task: Analyze this content in ANY language (English, German, French, etc.) and determine:
-1. Content quality metrics
-2. Emotional impact
-3. User preference alignment  
+1. Content quality metrics (focus on originality and information value)
+2. Emotional impact (constructive vs. manipulative)
+3. User preference alignment (based on stated interests)
 4. Content category classification
-5. Whether this is sponsored/promotional content (regardless of language)
+5. Content characteristics (original vs. reshared, substantive vs. superficial)
+6. AI detection - Determine if the content appears to be AI-generated
 
-Look for promotional language, commercial intent, sponsored indicators, and advertisement patterns in any language.
+Evaluate content for:
+- Original thought/analysis vs. reposts/reshares
+- Substantive information vs. small talk or personal anecdotes
+- Technical/factual depth vs. surface-level discussion
+- Educational value vs. self-promotion
+- Novel insights vs. repetitive content
+- Data-driven analysis vs. opinion without evidence
+- Human authenticity vs. AI-generated patterns
+
+IMPORTANT: If you detect AI-generated content with high confidence (>0.7), the originality score should be capped at 3/10 regardless of other factors. AI-generated content lacks the authentic human perspective and genuine insights we value.
 
 CRITICAL CLASSIFICATION RULES:
 - If content contains "Anzeige" (German) or "Sponsored" (English) labels → MUST classify as "advertisement"
@@ -803,13 +862,21 @@ Provide ratings in JSON format as specified.`;
             const overallScore = Math.round((contentScore * weights.contentQuality +
                 emotionalScore * weights.emotionalImpact +
                 preferenceScore * weights.userPreferences) * 10);
+            // Apply AI-generated penalty if detected with high confidence
+            let finalScore = overallScore;
+            if (ratings.isAIGenerated && ratings.aiConfidence > 0.7) {
+                // Reduce score by 50% for AI-generated content
+                finalScore = Math.round(overallScore * 0.5);
+            }
             return {
-                overallScore: Math.max(0, Math.min(100, overallScore)),
+                overallScore: Math.max(0, Math.min(100, finalScore)),
                 contentQuality: ratings.contentQuality,
                 emotionalImpact: ratings.emotionalImpact,
                 userPreferences: ratings.userPreferences,
                 contentType: ratings.contentType || { category: 'other', confidence: 0.5 },
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                isAIGenerated: ratings.isAIGenerated || false,
+                aiConfidence: ratings.aiConfidence || 0
             };
         }
         catch (error) {
@@ -1194,7 +1261,11 @@ async function initializeStorage() {
                 emotionalImpact: 0.3,
                 userPreferences: 0.3
             },
-            defaultViewMode: 'condensed' // Default to condensed view
+            defaultViewMode: 'condensed', // Default to condensed view
+            userPrompt: '', // Empty by default, user can customize
+            interestKeywords: [], // Empty by default
+            avoidKeywords: [], // Empty by default
+            preferOriginalContent: true // Default to preferring original content
         },
         modelSettings: {
             modelPath: 'models/default.gguf',
@@ -1325,7 +1396,9 @@ function createFallbackRating() {
             category,
             confidence: Math.random() * 0.3 + 0.7 // 0.7 to 1.0 confidence
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        isAIGenerated: Math.random() < 0.2, // 20% chance of being AI-generated in fallback
+        aiConfidence: Math.random() * 0.5 + 0.3 // 0.3 to 0.8 confidence
     };
 }
 // Message handling
@@ -1372,6 +1445,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             rating: cachedRating.overallScore,
                             contentType: cachedRating.contentType,
                             debugInfo: cachedRating.debugInfo,
+                            isAIGenerated: cachedRating.isAIGenerated,
+                            aiConfidence: cachedRating.aiConfidence,
                             cached: true
                         });
                         return;
@@ -1390,7 +1465,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         console.log('Using Ollama for content analysis');
                         const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
                         // Add timeout to prevent hanging requests
-                        const analysisPromise = _ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.analyzeContent(post, modelName);
+                        const analysisPromise = _ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.analyzeContent(post, modelName, settings?.settings);
                         const timeoutPromise = new Promise((_, reject) => {
                             setTimeout(() => reject(new Error('Ollama request timeout')), 30000); // 30 second timeout
                         });
@@ -1420,7 +1495,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     sendResponse({
                         rating: rating.overallScore,
                         contentType: rating.contentType,
-                        debugInfo: rating.debugInfo
+                        debugInfo: rating.debugInfo,
+                        isAIGenerated: rating.isAIGenerated,
+                        aiConfidence: rating.aiConfidence
                     });
                 }
                 catch (error) {
@@ -1439,6 +1516,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     sendResponse({
                         rating: fallbackRating.overallScore,
                         contentType: fallbackRating.contentType,
+                        isAIGenerated: fallbackRating.isAIGenerated,
+                        aiConfidence: fallbackRating.aiConfidence,
                         fallback: true,
                         error: error instanceof Error ? error.message : String(error)
                     });

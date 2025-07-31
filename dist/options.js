@@ -6584,6 +6584,225 @@ const formGroupClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_
 
 /***/ }),
 
+/***/ "./node_modules/@mui/material/FormHelperText/FormHelperText.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/@mui/material/FormHelperText/FormHelperText.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_12__);
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/utils/composeClasses */ "./node_modules/@mui/utils/esm/composeClasses/composeClasses.js");
+/* harmony import */ var _FormControl_formControlState__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../FormControl/formControlState */ "./node_modules/@mui/material/FormControl/formControlState.js");
+/* harmony import */ var _FormControl_useFormControl__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../FormControl/useFormControl */ "./node_modules/@mui/material/FormControl/useFormControl.js");
+/* harmony import */ var _styles_styled__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../styles/styled */ "./node_modules/@mui/material/styles/styled.js");
+/* harmony import */ var _utils_capitalize__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/capitalize */ "./node_modules/@mui/material/utils/capitalize.js");
+/* harmony import */ var _formHelperTextClasses__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./formHelperTextClasses */ "./node_modules/@mui/material/FormHelperText/formHelperTextClasses.js");
+/* harmony import */ var _DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../DefaultPropsProvider */ "./node_modules/@mui/material/DefaultPropsProvider/DefaultPropsProvider.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+'use client';
+
+
+
+var _span;
+const _excluded = ["children", "className", "component", "disabled", "error", "filled", "focused", "margin", "required", "variant"];
+
+
+
+
+
+
+
+
+
+
+
+const useUtilityClasses = ownerState => {
+  const {
+    classes,
+    contained,
+    size,
+    disabled,
+    error,
+    filled,
+    focused,
+    required
+  } = ownerState;
+  const slots = {
+    root: ['root', disabled && 'disabled', error && 'error', size && `size${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(size)}`, contained && 'contained', focused && 'focused', filled && 'filled', required && 'required']
+  };
+  return (0,_mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_6__["default"])(slots, _formHelperTextClasses__WEBPACK_IMPORTED_MODULE_7__.getFormHelperTextUtilityClasses, classes);
+};
+const FormHelperTextRoot = (0,_styles_styled__WEBPACK_IMPORTED_MODULE_8__["default"])('p', {
+  name: 'MuiFormHelperText',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.size && styles[`size${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(ownerState.size)}`], ownerState.contained && styles.contained, ownerState.filled && styles.filled];
+  }
+})(({
+  theme,
+  ownerState
+}) => (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({
+  color: (theme.vars || theme).palette.text.secondary
+}, theme.typography.caption, {
+  textAlign: 'left',
+  marginTop: 3,
+  marginRight: 0,
+  marginBottom: 0,
+  marginLeft: 0,
+  [`&.${_formHelperTextClasses__WEBPACK_IMPORTED_MODULE_7__["default"].disabled}`]: {
+    color: (theme.vars || theme).palette.text.disabled
+  },
+  [`&.${_formHelperTextClasses__WEBPACK_IMPORTED_MODULE_7__["default"].error}`]: {
+    color: (theme.vars || theme).palette.error.main
+  }
+}, ownerState.size === 'small' && {
+  marginTop: 4
+}, ownerState.contained && {
+  marginLeft: 14,
+  marginRight: 14
+}));
+const FormHelperText = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.forwardRef(function FormHelperText(inProps, ref) {
+  const props = (0,_DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_9__.useDefaultProps)({
+    props: inProps,
+    name: 'MuiFormHelperText'
+  });
+  const {
+      children,
+      className,
+      component = 'p'
+    } = props,
+    other = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__["default"])(props, _excluded);
+  const muiFormControl = (0,_FormControl_useFormControl__WEBPACK_IMPORTED_MODULE_10__["default"])();
+  const fcs = (0,_FormControl_formControlState__WEBPACK_IMPORTED_MODULE_11__["default"])({
+    props,
+    muiFormControl,
+    states: ['variant', 'size', 'disabled', 'error', 'filled', 'focused', 'required']
+  });
+  const ownerState = (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({}, props, {
+    component,
+    contained: fcs.variant === 'filled' || fcs.variant === 'outlined',
+    variant: fcs.variant,
+    size: fcs.size,
+    disabled: fcs.disabled,
+    error: fcs.error,
+    filled: fcs.filled,
+    focused: fcs.focused,
+    required: fcs.required
+  });
+  const classes = useUtilityClasses(ownerState);
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(FormHelperTextRoot, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({
+    as: component,
+    ownerState: ownerState,
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_3__["default"])(classes.root, className),
+    ref: ref
+  }, other, {
+    children: children === ' ' ? // notranslate needed while Google Translate will not fix zero-width space issue
+    _span || (_span = /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("span", {
+      className: "notranslate",
+      children: "\u200B"
+    })) : children
+  }));
+});
+ true ? FormHelperText.propTypes /* remove-proptypes */ = {
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
+  /**
+   * The content of the component.
+   *
+   * If `' '` is provided, the component reserves one line height for displaying a future message.
+   */
+  children: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().node),
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object),
+  /**
+   * @ignore
+   */
+  className: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string),
+  /**
+   * The component used for the root node.
+   * Either a string to use a HTML element or a component.
+   */
+  component: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().elementType),
+  /**
+   * If `true`, the helper text should be displayed in a disabled state.
+   */
+  disabled: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `true`, helper text should be displayed in an error state.
+   */
+  error: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `true`, the helper text should use filled classes key.
+   */
+  filled: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `true`, the helper text should use focused classes key.
+   */
+  focused: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `dense`, will adjust vertical spacing. This is normally obtained via context from
+   * FormControl.
+   */
+  margin: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOf(['dense']),
+  /**
+   * If `true`, the helper text should use required classes key.
+   */
+  required: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_12___default().arrayOf(prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_12___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool)])), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object)]),
+  /**
+   * The variant to use.
+   */
+  variant: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOf(['filled', 'outlined', 'standard']), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string)])
+} : 0;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (FormHelperText);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/material/FormHelperText/formHelperTextClasses.js":
+/*!****************************************************************************!*\
+  !*** ./node_modules/@mui/material/FormHelperText/formHelperTextClasses.js ***!
+  \****************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   getFormHelperTextUtilityClasses: () => (/* binding */ getFormHelperTextUtilityClasses)
+/* harmony export */ });
+/* harmony import */ var _mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @mui/utils/generateUtilityClasses */ "./node_modules/@mui/utils/esm/generateUtilityClasses/generateUtilityClasses.js");
+/* harmony import */ var _mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @mui/utils/generateUtilityClass */ "./node_modules/@mui/utils/esm/generateUtilityClass/generateUtilityClass.js");
+
+
+function getFormHelperTextUtilityClasses(slot) {
+  return (0,_mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__["default"])('MuiFormHelperText', slot);
+}
+const formHelperTextClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__["default"])('MuiFormHelperText', ['root', 'error', 'disabled', 'sizeSmall', 'sizeMedium', 'contained', 'focused', 'filled', 'required']);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (formHelperTextClasses);
+
+/***/ }),
+
 /***/ "./node_modules/@mui/material/FormLabel/FormLabel.js":
 /*!***********************************************************!*\
   !*** ./node_modules/@mui/material/FormLabel/FormLabel.js ***!
@@ -17688,6 +17907,399 @@ const svgIconClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MO
 
 /***/ }),
 
+/***/ "./node_modules/@mui/material/Switch/Switch.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/@mui/material/Switch/Switch.js ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_12__);
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _mui_utils_refType__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @mui/utils/refType */ "./node_modules/@mui/utils/esm/refType/refType.js");
+/* harmony import */ var _mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @mui/utils/composeClasses */ "./node_modules/@mui/utils/esm/composeClasses/composeClasses.js");
+/* harmony import */ var _mui_system_colorManipulator__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @mui/system/colorManipulator */ "./node_modules/@mui/system/colorManipulator.js");
+/* harmony import */ var _utils_capitalize__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/capitalize */ "./node_modules/@mui/material/utils/capitalize.js");
+/* harmony import */ var _internal_SwitchBase__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../internal/SwitchBase */ "./node_modules/@mui/material/internal/SwitchBase.js");
+/* harmony import */ var _zero_styled__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../zero-styled */ "./node_modules/@mui/material/styles/styled.js");
+/* harmony import */ var _DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../DefaultPropsProvider */ "./node_modules/@mui/material/DefaultPropsProvider/DefaultPropsProvider.js");
+/* harmony import */ var _switchClasses__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./switchClasses */ "./node_modules/@mui/material/Switch/switchClasses.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+'use client';
+
+// @inheritedComponent IconButton
+
+
+const _excluded = ["className", "color", "edge", "size", "sx"];
+
+
+
+
+
+
+
+
+
+
+
+
+
+const useUtilityClasses = ownerState => {
+  const {
+    classes,
+    edge,
+    size,
+    color,
+    checked,
+    disabled
+  } = ownerState;
+  const slots = {
+    root: ['root', edge && `edge${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(edge)}`, `size${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(size)}`],
+    switchBase: ['switchBase', `color${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(color)}`, checked && 'checked', disabled && 'disabled'],
+    thumb: ['thumb'],
+    track: ['track'],
+    input: ['input']
+  };
+  const composedClasses = (0,_mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_6__["default"])(slots, _switchClasses__WEBPACK_IMPORTED_MODULE_7__.getSwitchUtilityClass, classes);
+  return (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({}, classes, composedClasses);
+};
+const SwitchRoot = (0,_zero_styled__WEBPACK_IMPORTED_MODULE_8__["default"])('span', {
+  name: 'MuiSwitch',
+  slot: 'Root',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.edge && styles[`edge${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(ownerState.edge)}`], styles[`size${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(ownerState.size)}`]];
+  }
+})({
+  display: 'inline-flex',
+  width: 34 + 12 * 2,
+  height: 14 + 12 * 2,
+  overflow: 'hidden',
+  padding: 12,
+  boxSizing: 'border-box',
+  position: 'relative',
+  flexShrink: 0,
+  zIndex: 0,
+  // Reset the stacking context.
+  verticalAlign: 'middle',
+  // For correct alignment with the text.
+  '@media print': {
+    colorAdjust: 'exact'
+  },
+  variants: [{
+    props: {
+      edge: 'start'
+    },
+    style: {
+      marginLeft: -8
+    }
+  }, {
+    props: {
+      edge: 'end'
+    },
+    style: {
+      marginRight: -8
+    }
+  }, {
+    props: {
+      size: 'small'
+    },
+    style: {
+      width: 40,
+      height: 24,
+      padding: 7,
+      [`& .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].thumb}`]: {
+        width: 16,
+        height: 16
+      },
+      [`& .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].switchBase}`]: {
+        padding: 4,
+        [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].checked}`]: {
+          transform: 'translateX(16px)'
+        }
+      }
+    }
+  }]
+});
+const SwitchSwitchBase = (0,_zero_styled__WEBPACK_IMPORTED_MODULE_8__["default"])(_internal_SwitchBase__WEBPACK_IMPORTED_MODULE_9__["default"], {
+  name: 'MuiSwitch',
+  slot: 'SwitchBase',
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.switchBase, {
+      [`& .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].input}`]: styles.input
+    }, ownerState.color !== 'default' && styles[`color${(0,_utils_capitalize__WEBPACK_IMPORTED_MODULE_5__["default"])(ownerState.color)}`]];
+  }
+})(({
+  theme
+}) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  zIndex: 1,
+  // Render above the focus ripple.
+  color: theme.vars ? theme.vars.palette.Switch.defaultColor : `${theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.grey[300]}`,
+  transition: theme.transitions.create(['left', 'transform'], {
+    duration: theme.transitions.duration.shortest
+  }),
+  [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].checked}`]: {
+    transform: 'translateX(20px)'
+  },
+  [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].disabled}`]: {
+    color: theme.vars ? theme.vars.palette.Switch.defaultDisabledColor : `${theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[600]}`
+  },
+  [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].checked} + .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].track}`]: {
+    opacity: 0.5
+  },
+  [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].disabled} + .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].track}`]: {
+    opacity: theme.vars ? theme.vars.opacity.switchTrackDisabled : `${theme.palette.mode === 'light' ? 0.12 : 0.2}`
+  },
+  [`& .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].input}`]: {
+    left: '-100%',
+    width: '300%'
+  }
+}), ({
+  theme
+}) => ({
+  '&:hover': {
+    backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : (0,_mui_system_colorManipulator__WEBPACK_IMPORTED_MODULE_10__.alpha)(theme.palette.action.active, theme.palette.action.hoverOpacity),
+    // Reset on touch devices, it doesn't add specificity
+    '@media (hover: none)': {
+      backgroundColor: 'transparent'
+    }
+  },
+  variants: [...Object.entries(theme.palette).filter(([, value]) => value.main && value.light) // check all the used fields in the style below
+  .map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].checked}`]: {
+        color: (theme.vars || theme).palette[color].main,
+        '&:hover': {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : (0,_mui_system_colorManipulator__WEBPACK_IMPORTED_MODULE_10__.alpha)(theme.palette[color].main, theme.palette.action.hoverOpacity),
+          '@media (hover: none)': {
+            backgroundColor: 'transparent'
+          }
+        },
+        [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].disabled}`]: {
+          color: theme.vars ? theme.vars.palette.Switch[`${color}DisabledColor`] : `${theme.palette.mode === 'light' ? (0,_mui_system_colorManipulator__WEBPACK_IMPORTED_MODULE_10__.lighten)(theme.palette[color].main, 0.62) : (0,_mui_system_colorManipulator__WEBPACK_IMPORTED_MODULE_10__.darken)(theme.palette[color].main, 0.55)}`
+        }
+      },
+      [`&.${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].checked} + .${_switchClasses__WEBPACK_IMPORTED_MODULE_7__["default"].track}`]: {
+        backgroundColor: (theme.vars || theme).palette[color].main
+      }
+    }
+  }))]
+}));
+const SwitchTrack = (0,_zero_styled__WEBPACK_IMPORTED_MODULE_8__["default"])('span', {
+  name: 'MuiSwitch',
+  slot: 'Track',
+  overridesResolver: (props, styles) => styles.track
+})(({
+  theme
+}) => ({
+  height: '100%',
+  width: '100%',
+  borderRadius: 14 / 2,
+  zIndex: -1,
+  transition: theme.transitions.create(['opacity', 'background-color'], {
+    duration: theme.transitions.duration.shortest
+  }),
+  backgroundColor: theme.vars ? theme.vars.palette.common.onBackground : `${theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white}`,
+  opacity: theme.vars ? theme.vars.opacity.switchTrack : `${theme.palette.mode === 'light' ? 0.38 : 0.3}`
+}));
+const SwitchThumb = (0,_zero_styled__WEBPACK_IMPORTED_MODULE_8__["default"])('span', {
+  name: 'MuiSwitch',
+  slot: 'Thumb',
+  overridesResolver: (props, styles) => styles.thumb
+})(({
+  theme
+}) => ({
+  boxShadow: (theme.vars || theme).shadows[1],
+  backgroundColor: 'currentColor',
+  width: 20,
+  height: 20,
+  borderRadius: '50%'
+}));
+const Switch = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.forwardRef(function Switch(inProps, ref) {
+  const props = (0,_DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_11__.useDefaultProps)({
+    props: inProps,
+    name: 'MuiSwitch'
+  });
+  const {
+      className,
+      color = 'primary',
+      edge = false,
+      size = 'medium',
+      sx
+    } = props,
+    other = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__["default"])(props, _excluded);
+  const ownerState = (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({}, props, {
+    color,
+    edge,
+    size
+  });
+  const classes = useUtilityClasses(ownerState);
+  const icon = /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(SwitchThumb, {
+    className: classes.thumb,
+    ownerState: ownerState
+  });
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)(SwitchRoot, {
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_3__["default"])(classes.root, className),
+    sx: sx,
+    ownerState: ownerState,
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(SwitchSwitchBase, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({
+      type: "checkbox",
+      icon: icon,
+      checkedIcon: icon,
+      ref: ref,
+      ownerState: ownerState
+    }, other, {
+      classes: (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_1__["default"])({}, classes, {
+        root: classes.switchBase
+      })
+    })), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(SwitchTrack, {
+      className: classes.track,
+      ownerState: ownerState
+    })]
+  });
+});
+ true ? Switch.propTypes /* remove-proptypes */ = {
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
+  /**
+   * If `true`, the component is checked.
+   */
+  checked: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * The icon to display when the component is checked.
+   */
+  checkedIcon: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().node),
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object),
+  /**
+   * @ignore
+   */
+  className: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string),
+  /**
+   * The color of the component.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
+   * @default 'primary'
+   */
+  color: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOf(['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning']), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string)]),
+  /**
+   * The default checked state. Use when the component is not controlled.
+   */
+  defaultChecked: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `true`, the component is disabled.
+   */
+  disabled: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If `true`, the ripple effect is disabled.
+   * @default false
+   */
+  disableRipple: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * If given, uses a negative margin to counteract the padding on one
+   * side (this is often helpful for aligning the left or right
+   * side of the icon with content above or below, without ruining the border
+   * size and shape).
+   * @default false
+   */
+  edge: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOf(['end', 'start', false]),
+  /**
+   * The icon to display when the component is unchecked.
+   */
+  icon: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().node),
+  /**
+   * The id of the `input` element.
+   */
+  id: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string),
+  /**
+   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
+   */
+  inputProps: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object),
+  /**
+   * Pass a ref to the `input` element.
+   */
+  inputRef: _mui_utils_refType__WEBPACK_IMPORTED_MODULE_13__["default"],
+  /**
+   * Callback fired when the state is changed.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} event The event source of the callback.
+   * You can pull out the new value by accessing `event.target.value` (string).
+   * You can pull out the new checked state by accessing `event.target.checked` (boolean).
+   */
+  onChange: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().func),
+  /**
+   * If `true`, the `input` element is required.
+   * @default false
+   */
+  required: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool),
+  /**
+   * The size of the component.
+   * `small` is equivalent to the dense switch styling.
+   * @default 'medium'
+   */
+  size: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOf(['medium', 'small']), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().string)]),
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx: prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_12___default().arrayOf(prop_types__WEBPACK_IMPORTED_MODULE_12___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_12___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().bool)])), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_12___default().object)]),
+  /**
+   * The value of the component. The DOM API casts this to a string.
+   * The browser uses "on" as the default value.
+   */
+  value: (prop_types__WEBPACK_IMPORTED_MODULE_12___default().any)
+} : 0;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Switch);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/material/Switch/switchClasses.js":
+/*!************************************************************!*\
+  !*** ./node_modules/@mui/material/Switch/switchClasses.js ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   getSwitchUtilityClass: () => (/* binding */ getSwitchUtilityClass)
+/* harmony export */ });
+/* harmony import */ var _mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @mui/utils/generateUtilityClasses */ "./node_modules/@mui/utils/esm/generateUtilityClasses/generateUtilityClasses.js");
+/* harmony import */ var _mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @mui/utils/generateUtilityClass */ "./node_modules/@mui/utils/esm/generateUtilityClass/generateUtilityClass.js");
+
+
+function getSwitchUtilityClass(slot) {
+  return (0,_mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__["default"])('MuiSwitch', slot);
+}
+const switchClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__["default"])('MuiSwitch', ['root', 'edgeStart', 'edgeEnd', 'switchBase', 'colorPrimary', 'colorSecondary', 'sizeSmall', 'sizeMedium', 'checked', 'disabled', 'input', 'thumb', 'track']);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (switchClasses);
+
+/***/ }),
+
 /***/ "./node_modules/@mui/material/Tab/Tab.js":
 /*!***********************************************!*\
   !*** ./node_modules/@mui/material/Tab/Tab.js ***!
@@ -20289,6 +20901,441 @@ function getTabsUtilityClass(slot) {
 }
 const tabsClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__["default"])('MuiTabs', ['root', 'vertical', 'flexContainer', 'flexContainerVertical', 'centered', 'scroller', 'fixed', 'scrollableX', 'scrollableY', 'hideScrollbar', 'scrollButtons', 'scrollButtonsHideMobile', 'indicator']);
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (tabsClasses);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/material/TextField/TextField.js":
+/*!***********************************************************!*\
+  !*** ./node_modules/@mui/material/TextField/TextField.js ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_17__);
+/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
+/* harmony import */ var _mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @mui/utils/composeClasses */ "./node_modules/@mui/utils/esm/composeClasses/composeClasses.js");
+/* harmony import */ var _mui_utils_useId__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @mui/utils/useId */ "./node_modules/@mui/utils/esm/useId/useId.js");
+/* harmony import */ var _mui_utils_refType__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @mui/utils/refType */ "./node_modules/@mui/utils/esm/refType/refType.js");
+/* harmony import */ var _styles_styled__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../styles/styled */ "./node_modules/@mui/material/styles/styled.js");
+/* harmony import */ var _DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../DefaultPropsProvider */ "./node_modules/@mui/material/DefaultPropsProvider/DefaultPropsProvider.js");
+/* harmony import */ var _Input__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../Input */ "./node_modules/@mui/material/Input/Input.js");
+/* harmony import */ var _FilledInput__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../FilledInput */ "./node_modules/@mui/material/FilledInput/FilledInput.js");
+/* harmony import */ var _OutlinedInput__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../OutlinedInput */ "./node_modules/@mui/material/OutlinedInput/OutlinedInput.js");
+/* harmony import */ var _InputLabel__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../InputLabel */ "./node_modules/@mui/material/InputLabel/InputLabel.js");
+/* harmony import */ var _FormControl__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../FormControl */ "./node_modules/@mui/material/FormControl/FormControl.js");
+/* harmony import */ var _FormHelperText__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../FormHelperText */ "./node_modules/@mui/material/FormHelperText/FormHelperText.js");
+/* harmony import */ var _Select__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../Select */ "./node_modules/@mui/material/Select/Select.js");
+/* harmony import */ var _textFieldClasses__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./textFieldClasses */ "./node_modules/@mui/material/TextField/textFieldClasses.js");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react/jsx-runtime */ "./node_modules/react/jsx-runtime.js");
+'use client';
+
+
+
+const _excluded = ["autoComplete", "autoFocus", "children", "className", "color", "defaultValue", "disabled", "error", "FormHelperTextProps", "fullWidth", "helperText", "id", "InputLabelProps", "inputProps", "InputProps", "inputRef", "label", "maxRows", "minRows", "multiline", "name", "onBlur", "onChange", "onFocus", "placeholder", "required", "rows", "select", "SelectProps", "type", "value", "variant"];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const variantComponent = {
+  standard: _Input__WEBPACK_IMPORTED_MODULE_5__["default"],
+  filled: _FilledInput__WEBPACK_IMPORTED_MODULE_6__["default"],
+  outlined: _OutlinedInput__WEBPACK_IMPORTED_MODULE_7__["default"]
+};
+const useUtilityClasses = ownerState => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ['root']
+  };
+  return (0,_mui_utils_composeClasses__WEBPACK_IMPORTED_MODULE_8__["default"])(slots, _textFieldClasses__WEBPACK_IMPORTED_MODULE_9__.getTextFieldUtilityClass, classes);
+};
+const TextFieldRoot = (0,_styles_styled__WEBPACK_IMPORTED_MODULE_10__["default"])(_FormControl__WEBPACK_IMPORTED_MODULE_11__["default"], {
+  name: 'MuiTextField',
+  slot: 'Root',
+  overridesResolver: (props, styles) => styles.root
+})({});
+
+/**
+ * The `TextField` is a convenience wrapper for the most common cases (80%).
+ * It cannot be all things to all people, otherwise the API would grow out of control.
+ *
+ * ## Advanced Configuration
+ *
+ * It's important to understand that the text field is a simple abstraction
+ * on top of the following components:
+ *
+ * - [FormControl](/material-ui/api/form-control/)
+ * - [InputLabel](/material-ui/api/input-label/)
+ * - [FilledInput](/material-ui/api/filled-input/)
+ * - [OutlinedInput](/material-ui/api/outlined-input/)
+ * - [Input](/material-ui/api/input/)
+ * - [FormHelperText](/material-ui/api/form-helper-text/)
+ *
+ * If you wish to alter the props applied to the `input` element, you can do so as follows:
+ *
+ * ```jsx
+ * const inputProps = {
+ *   step: 300,
+ * };
+ *
+ * return <TextField id="time" type="time" inputProps={inputProps} />;
+ * ```
+ *
+ * For advanced cases, please look at the source of TextField by clicking on the
+ * "Edit this page" button above. Consider either:
+ *
+ * - using the upper case props for passing values directly to the components
+ * - using the underlying components directly as shown in the demos
+ */
+const TextField = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2__.forwardRef(function TextField(inProps, ref) {
+  const props = (0,_DefaultPropsProvider__WEBPACK_IMPORTED_MODULE_12__.useDefaultProps)({
+    props: inProps,
+    name: 'MuiTextField'
+  });
+  const {
+      autoComplete,
+      autoFocus = false,
+      children,
+      className,
+      color = 'primary',
+      defaultValue,
+      disabled = false,
+      error = false,
+      FormHelperTextProps,
+      fullWidth = false,
+      helperText,
+      id: idOverride,
+      InputLabelProps,
+      inputProps,
+      InputProps,
+      inputRef,
+      label,
+      maxRows,
+      minRows,
+      multiline = false,
+      name,
+      onBlur,
+      onChange,
+      onFocus,
+      placeholder,
+      required = false,
+      rows,
+      select = false,
+      SelectProps,
+      type,
+      value,
+      variant = 'outlined'
+    } = props,
+    other = (0,_babel_runtime_helpers_esm_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_1__["default"])(props, _excluded);
+  const ownerState = (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, props, {
+    autoFocus,
+    color,
+    disabled,
+    error,
+    fullWidth,
+    multiline,
+    required,
+    select,
+    variant
+  });
+  const classes = useUtilityClasses(ownerState);
+  if (true) {
+    if (select && !children) {
+      console.error('MUI: `children` must be passed when using the `TextField` component with `select`.');
+    }
+  }
+  const InputMore = {};
+  if (variant === 'outlined') {
+    if (InputLabelProps && typeof InputLabelProps.shrink !== 'undefined') {
+      InputMore.notched = InputLabelProps.shrink;
+    }
+    InputMore.label = label;
+  }
+  if (select) {
+    // unset defaults from textbox inputs
+    if (!SelectProps || !SelectProps.native) {
+      InputMore.id = undefined;
+    }
+    InputMore['aria-describedby'] = undefined;
+  }
+  const id = (0,_mui_utils_useId__WEBPACK_IMPORTED_MODULE_13__["default"])(idOverride);
+  const helperTextId = helperText && id ? `${id}-helper-text` : undefined;
+  const inputLabelId = label && id ? `${id}-label` : undefined;
+  const InputComponent = variantComponent[variant];
+  const InputElement = /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(InputComponent, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+    "aria-describedby": helperTextId,
+    autoComplete: autoComplete,
+    autoFocus: autoFocus,
+    defaultValue: defaultValue,
+    fullWidth: fullWidth,
+    multiline: multiline,
+    name: name,
+    rows: rows,
+    maxRows: maxRows,
+    minRows: minRows,
+    type: type,
+    value: value,
+    id: id,
+    inputRef: inputRef,
+    onBlur: onBlur,
+    onChange: onChange,
+    onFocus: onFocus,
+    placeholder: placeholder,
+    inputProps: inputProps
+  }, InputMore, InputProps));
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)(TextFieldRoot, (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+    className: (0,clsx__WEBPACK_IMPORTED_MODULE_3__["default"])(classes.root, className),
+    disabled: disabled,
+    error: error,
+    fullWidth: fullWidth,
+    ref: ref,
+    required: required,
+    color: color,
+    variant: variant,
+    ownerState: ownerState
+  }, other, {
+    children: [label != null && label !== '' && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_InputLabel__WEBPACK_IMPORTED_MODULE_14__["default"], (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      htmlFor: id,
+      id: inputLabelId
+    }, InputLabelProps, {
+      children: label
+    })), select ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_Select__WEBPACK_IMPORTED_MODULE_15__["default"], (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      "aria-describedby": helperTextId,
+      id: id,
+      labelId: inputLabelId,
+      value: value,
+      input: InputElement
+    }, SelectProps, {
+      children: children
+    })) : InputElement, helperText && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_FormHelperText__WEBPACK_IMPORTED_MODULE_16__["default"], (0,_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      id: helperTextId
+    }, FormHelperTextProps, {
+      children: helperText
+    }))]
+  }));
+});
+ true ? TextField.propTypes /* remove-proptypes */ = {
+  // ┌────────────────────────────── Warning ──────────────────────────────┐
+  // │ These PropTypes are generated from the TypeScript type definitions. │
+  // │    To update them, edit the d.ts file and run `pnpm proptypes`.     │
+  // └─────────────────────────────────────────────────────────────────────┘
+  /**
+   * This prop helps users to fill forms faster, especially on mobile devices.
+   * The name can be confusing, as it's more like an autofill.
+   * You can learn more about it [following the specification](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofill).
+   */
+  autoComplete: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * If `true`, the `input` element is focused during the first mount.
+   * @default false
+   */
+  autoFocus: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * @ignore
+   */
+  children: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().node),
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * @ignore
+   */
+  className: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * The color of the component.
+   * It supports both default and custom theme colors, which can be added as shown in the
+   * [palette customization guide](https://mui.com/material-ui/customization/palette/#custom-colors).
+   * @default 'primary'
+   */
+  color: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOf(['primary', 'secondary', 'error', 'info', 'success', 'warning']), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string)]),
+  /**
+   * The default value. Use when the component is not controlled.
+   */
+  defaultValue: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().any),
+  /**
+   * If `true`, the component is disabled.
+   * @default false
+   */
+  disabled: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * If `true`, the label is displayed in an error state.
+   * @default false
+   */
+  error: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * Props applied to the [`FormHelperText`](/material-ui/api/form-helper-text/) element.
+   */
+  FormHelperTextProps: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * If `true`, the input will take up the full width of its container.
+   * @default false
+   */
+  fullWidth: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * The helper text content.
+   */
+  helperText: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().node),
+  /**
+   * The id of the `input` element.
+   * Use this prop to make `label` and `helperText` accessible for screen readers.
+   */
+  id: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * Props applied to the [`InputLabel`](/material-ui/api/input-label/) element.
+   * Pointer events like `onClick` are enabled if and only if `shrink` is `true`.
+   */
+  InputLabelProps: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * [Attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Attributes) applied to the `input` element.
+   */
+  inputProps: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * Props applied to the Input element.
+   * It will be a [`FilledInput`](/material-ui/api/filled-input/),
+   * [`OutlinedInput`](/material-ui/api/outlined-input/) or [`Input`](/material-ui/api/input/)
+   * component depending on the `variant` prop value.
+   */
+  InputProps: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * Pass a ref to the `input` element.
+   */
+  inputRef: _mui_utils_refType__WEBPACK_IMPORTED_MODULE_18__["default"],
+  /**
+   * The label content.
+   */
+  label: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().node),
+  /**
+   * If `dense` or `normal`, will adjust vertical spacing of this and contained components.
+   * @default 'none'
+   */
+  margin: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOf(['dense', 'none', 'normal']),
+  /**
+   * Maximum number of rows to display when multiline option is set to true.
+   */
+  maxRows: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_17___default().number), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string)]),
+  /**
+   * Minimum number of rows to display when multiline option is set to true.
+   */
+  minRows: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_17___default().number), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string)]),
+  /**
+   * If `true`, a `textarea` element is rendered instead of an input.
+   * @default false
+   */
+  multiline: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * Name attribute of the `input` element.
+   */
+  name: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * @ignore
+   */
+  onBlur: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().func),
+  /**
+   * Callback fired when the value is changed.
+   *
+   * @param {object} event The event source of the callback.
+   * You can pull out the new value by accessing `event.target.value` (string).
+   */
+  onChange: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().func),
+  /**
+   * @ignore
+   */
+  onFocus: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().func),
+  /**
+   * The short hint displayed in the `input` before the user enters a value.
+   */
+  placeholder: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * If `true`, the label is displayed as required and the `input` element is required.
+   * @default false
+   */
+  required: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * Number of rows to display when multiline option is set to true.
+   */
+  rows: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_17___default().number), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string)]),
+  /**
+   * Render a [`Select`](/material-ui/api/select/) element while passing the Input element to `Select` as `input` parameter.
+   * If this option is set you must pass the options of the select as children.
+   * @default false
+   */
+  select: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool),
+  /**
+   * Props applied to the [`Select`](/material-ui/api/select/) element.
+   */
+  SelectProps: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object),
+  /**
+   * The size of the component.
+   */
+  size: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOf(['medium', 'small']), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string)]),
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_17___default().arrayOf(prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOfType([(prop_types__WEBPACK_IMPORTED_MODULE_17___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().bool)])), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().func), (prop_types__WEBPACK_IMPORTED_MODULE_17___default().object)]),
+  /**
+   * Type of the `input` element. It should be [a valid HTML5 input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#Form_%3Cinput%3E_types).
+   */
+  type: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().string),
+  /**
+   * The value of the `input` element, required for a controlled component.
+   */
+  value: (prop_types__WEBPACK_IMPORTED_MODULE_17___default().any),
+  /**
+   * The variant to use.
+   * @default 'outlined'
+   */
+  variant: prop_types__WEBPACK_IMPORTED_MODULE_17___default().oneOf(['filled', 'outlined', 'standard'])
+} : 0;
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (TextField);
+
+/***/ }),
+
+/***/ "./node_modules/@mui/material/TextField/textFieldClasses.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/@mui/material/TextField/textFieldClasses.js ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   getTextFieldUtilityClass: () => (/* binding */ getTextFieldUtilityClass)
+/* harmony export */ });
+/* harmony import */ var _mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @mui/utils/generateUtilityClasses */ "./node_modules/@mui/utils/esm/generateUtilityClasses/generateUtilityClasses.js");
+/* harmony import */ var _mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @mui/utils/generateUtilityClass */ "./node_modules/@mui/utils/esm/generateUtilityClass/generateUtilityClass.js");
+
+
+function getTextFieldUtilityClass(slot) {
+  return (0,_mui_utils_generateUtilityClass__WEBPACK_IMPORTED_MODULE_0__["default"])('MuiTextField', slot);
+}
+const textFieldClasses = (0,_mui_utils_generateUtilityClasses__WEBPACK_IMPORTED_MODULE_1__["default"])('MuiTextField', ['root']);
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (textFieldClasses);
 
 /***/ }),
 
@@ -71575,16 +72622,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/RadioGroup/RadioGroup.js");
 /* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/FormControlLabel/FormControlLabel.js");
 /* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Radio/Radio.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/FormControl/FormControl.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/InputLabel/InputLabel.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Select/Select.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/MenuItem/MenuItem.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableContainer/TableContainer.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Table/Table.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableHead/TableHead.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableRow/TableRow.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableCell/TableCell.js");
-/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableBody/TableBody.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TextField/TextField.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Switch/Switch.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/FormControl/FormControl.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/InputLabel/InputLabel.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Select/Select.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/MenuItem/MenuItem.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableContainer/TableContainer.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/Table/Table.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableHead/TableHead.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableRow/TableRow.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableCell/TableCell.js");
+/* harmony import */ var _mui_material__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! @mui/material */ "./node_modules/@mui/material/TableBody/TableBody.js");
 /* harmony import */ var _mui_icons_material__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @mui/icons-material */ "./node_modules/@mui/icons-material/esm/Shield.js");
 /* harmony import */ var _mui_icons_material__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @mui/icons-material */ "./node_modules/@mui/icons-material/esm/Psychology.js");
 /* harmony import */ var _mui_icons_material__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @mui/icons-material */ "./node_modules/@mui/icons-material/esm/VisibilityOff.js");
@@ -71806,14 +72855,20 @@ const Options = () => {
     };
     if (!settings || !modelSettings)
         return (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("div", { children: "Loading..." });
-    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_4__["default"], { maxWidth: "md", sx: { py: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h4", gutterBottom: true, children: isSetupMode ? 'Welcome to Hardcore Blackout' : 'Hardcore Blackout Settings' }), isSetupMode && setupStep === 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_10__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Smart Content Filtering" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Uses advanced AI to analyze and rate social media content in real-time. Hide low-quality posts, dim questionable content, and highlight gems." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_11__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "100% Private AI" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "All processing happens locally on your device. Your data never leaves your browser. Choose between WASM models or your local Ollama server." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_12__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Reduce Noise & Toxicity" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Automatically hide spam, clickbait, and toxic content. Customize thresholds to match your preferences for a cleaner feed." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_13__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Feed Analytics" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Track your feed's quality over time. See top authors, content types, and engagement patterns to optimize your social media experience." })] }) }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center', mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, color: "text.secondary", children: "Take control of your social media experience" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "contained", size: "large", onClick: () => setSetupStep(1), sx: { mt: 2 }, children: "Get Started" })] })] })), isSetupMode && setupStep === 1 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Initial Setup" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { paragraph: true, children: "Let's configure your content filter. You'll need to:" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("ol", { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Ensure Ollama is running on your system" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Select your preferred Ollama model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Configure your filtering preferences" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { paragraph: true, color: "text.secondary", children: "You can always change these settings later." })] }))] }), !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { borderBottom: 1, borderColor: 'divider', mb: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_16__["default"], { value: tabValue, onChange: handleTabChange, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Analytics" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Debug" })] }) })), ((isSetupMode && setupStep === 1) || (!isSetupMode && tabValue === 0)) && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Content Filtering" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Auto-Hide Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores below this value will be automatically hidden from view", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.autoHideThreshold, onChange: (_, value) => handleSettingChange('autoHideThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 20-30. Lower values mean fewer posts will be hidden." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Dim Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores below this value will appear dimmed but still visible", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.dimThreshold, onChange: (_, value) => handleSettingChange('dimThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 40-50. Helps identify potentially low-quality content." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Highlight Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores above this value will be highlighted as high-quality content", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.highlightThreshold, onChange: (_, value) => handleSettingChange('highlightThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 80-90. Only the highest quality content will be highlighted." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Default View Mode" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Choose whether rating overlays start in expanded or condensed view", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_20__["default"], { value: settings.defaultViewMode || 'condensed', onChange: (e) => handleSettingChange('defaultViewMode', e.target.value), row: true, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_21__["default"], { value: "condensed", control: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_22__["default"], {}), label: "Condensed (Recommended)" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_21__["default"], { value: "expanded", control: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_22__["default"], {}), label: "Expanded" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Condensed view shows only the score and category icon. Click the toggle button to expand." })] })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "AI Model Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3, p: 2, border: '1px solid', borderColor: ollamaAvailable ? 'success.main' : 'warning.main', borderRadius: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle1", gutterBottom: true, children: ["Ollama Status: ", ollamaAvailable ? '✅ Connected' : '⚠️ Not Connected'] }), !ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", gutterBottom: true, children: "Make sure Ollama is running on localhost:11434" }))] }), !ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 2 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", onClick: () => {
+    return ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_4__["default"], { maxWidth: "md", sx: { py: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h4", gutterBottom: true, children: isSetupMode ? 'Welcome to Hardcore Blackout' : 'Hardcore Blackout Settings' }), isSetupMode && setupStep === 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_10__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Smart Content Filtering" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Uses advanced AI to analyze and rate social media content in real-time. Hide low-quality posts, dim questionable content, and highlight gems." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_11__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "100% Private AI" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "All processing happens locally on your device. Your data never leaves your browser. Choose between WASM models or your local Ollama server." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_12__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Reduce Noise & Toxicity" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Automatically hide spam, clickbait, and toxic content. Customize thresholds to match your preferences for a cleaner feed." })] }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, md: 6, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_8__["default"], { sx: { height: '100%', boxShadow: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_9__["default"], { sx: { textAlign: 'center', p: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_icons_material__WEBPACK_IMPORTED_MODULE_13__["default"], { sx: { fontSize: 60, color: 'primary.main', mb: 2 } }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", gutterBottom: true, children: "Feed Analytics" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Track your feed's quality over time. See top authors, content types, and engagement patterns to optimize your social media experience." })] }) }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center', mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, color: "text.secondary", children: "Take control of your social media experience" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "contained", size: "large", onClick: () => setSetupStep(1), sx: { mt: 2 }, children: "Get Started" })] })] })), isSetupMode && setupStep === 1 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Initial Setup" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { paragraph: true, children: "Let's configure your content filter. You'll need to:" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)("ol", { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Ensure Ollama is running on your system" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Select your preferred Ollama model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { component: "li", children: "Configure your filtering preferences" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { paragraph: true, color: "text.secondary", children: "You can always change these settings later." })] }))] }), !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { borderBottom: 1, borderColor: 'divider', mb: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_16__["default"], { value: tabValue, onChange: handleTabChange, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Analytics" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_17__["default"], { label: "Debug" })] }) })), ((isSetupMode && setupStep === 1) || (!isSetupMode && tabValue === 0)) && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Content Filtering" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Auto-Hide Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores below this value will be automatically hidden from view", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.autoHideThreshold, onChange: (_, value) => handleSettingChange('autoHideThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 20-30. Lower values mean fewer posts will be hidden." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Dim Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores below this value will appear dimmed but still visible", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.dimThreshold, onChange: (_, value) => handleSettingChange('dimThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 40-50. Helps identify potentially low-quality content." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Highlight Threshold" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Posts with scores above this value will be highlighted as high-quality content", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: settings.highlightThreshold, onChange: (_, value) => handleSettingChange('highlightThreshold', value), min: 0, max: 100, step: 5, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 80-90. Only the highest quality content will be highlighted." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Default View Mode" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Choose whether rating overlays start in expanded or condensed view", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_20__["default"], { value: settings.defaultViewMode || 'condensed', onChange: (e) => handleSettingChange('defaultViewMode', e.target.value), row: true, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_21__["default"], { value: "condensed", control: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_22__["default"], {}), label: "Condensed (Recommended)" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_21__["default"], { value: "expanded", control: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_22__["default"], {}), label: "Expanded" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Condensed view shows only the score and category icon. Click the toggle button to expand." })] })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Content Preferences" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", sx: { mb: 3 }, children: "Customize how the AI evaluates content based on your interests" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_23__["default"], { fullWidth: true, multiline: true, rows: 3, label: "Your Content Preferences", value: settings.userPrompt || '', onChange: (e) => handleSettingChange('userPrompt', e.target.value), placeholder: "Example: I'm interested in cutting-edge technology, AI research, and software architecture. I prefer technical depth over surface-level coverage.", helperText: "Describe what kind of content you find valuable. This helps the AI better align ratings with your interests." }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_23__["default"], { fullWidth: true, label: "Topics of Interest", value: settings.interestKeywords?.join(', ') || '', onChange: (e) => {
+                                            const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+                                            handleSettingChange('interestKeywords', keywords);
+                                        }, placeholder: "AI, machine learning, software architecture, data science", helperText: "Comma-separated keywords for topics you're interested in" }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_23__["default"], { fullWidth: true, label: "Topics to Avoid", value: settings.avoidKeywords?.join(', ') || '', onChange: (e) => {
+                                            const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k);
+                                            handleSettingChange('avoidKeywords', keywords);
+                                        }, placeholder: "politics, gossip, motivational quotes", helperText: "Comma-separated keywords for topics you want to avoid" }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Prefer Original Content" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Prioritize original insights over reshared content" })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_24__["default"], { checked: settings.preferOriginalContent ?? true, onChange: (e) => handleSettingChange('preferOriginalContent', e.target.checked) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle2", gutterBottom: true, children: "Example Preference Templates:" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", sx: { mb: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("strong", { children: "For Tech Enthusiasts:" }), " \"Focus on original research and data-driven insights. Prioritize content about emerging technologies, software architecture, and AI. Avoid motivational posts and reshared news.\""] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("strong", { children: "For Business Professionals:" }), " \"I value strategic insights, market analysis, and leadership perspectives. Prefer content with actionable takeaways over theoretical discussions.\""] })] })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 12, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "AI Model Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 4 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3, p: 2, border: '1px solid', borderColor: ollamaAvailable ? 'success.main' : 'warning.main', borderRadius: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle1", gutterBottom: true, children: ["Ollama Status: ", ollamaAvailable ? '✅ Connected' : '⚠️ Not Connected'] }), !ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", gutterBottom: true, children: "Make sure Ollama is running on localhost:11434" }))] }), !ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 2 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", onClick: () => {
                                                     chrome.runtime.sendMessage({ type: 'CHECK_OLLAMA' }, (response) => {
                                                         if (response && response.success) {
                                                             setOllamaAvailable(response.available);
                                                             setOllamaModels(response.models || []);
                                                         }
                                                     });
-                                                }, children: "Check Ollama Status" }) })), ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_23__["default"], { fullWidth: true, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_24__["default"], { children: "Ollama Model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_25__["default"], { value: modelSettings.ollamaModel || 'llama3.2', onChange: (e) => {
+                                                }, children: "Check Ollama Status" }) })), ollamaAvailable && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_25__["default"], { fullWidth: true, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_26__["default"], { children: "Ollama Model" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_27__["default"], { value: modelSettings.ollamaModel || 'llama3.2', onChange: (e) => {
                                                         const updatedSettings = {
                                                             ...modelSettings,
                                                             ollamaModel: e.target.value
@@ -71827,9 +72882,9 @@ const Options = () => {
                                                                 }
                                                             });
                                                         });
-                                                    }, label: "Ollama Model", children: ollamaModels.map((model) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_26__["default"], { value: model, children: model }, model))) })] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle2", gutterBottom: true, sx: { mt: 3 }, children: "Inference Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Max Tokens" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Controls the maximum length of the AI's analysis. Higher values mean more detailed analysis but slower processing.", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: modelSettings.inferenceSettings.maxTokens, onChange: (_, value) => handleModelSettingChange('maxTokens', value), min: 50, max: 500, step: 50, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 100. Increase for more detailed analysis, decrease for faster processing." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Temperature" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Controls how creative or conservative the AI's analysis is. Lower values mean more consistent ratings.", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: modelSettings.inferenceSettings.temperature, onChange: (_, value) => handleModelSettingChange('temperature', value), min: 0, max: 1, step: 0.1, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 0.7. Lower values (0.1-0.3) for more consistent ratings." })] })] })] }) })] })), tabValue === 1 && !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Feed Analytics Overview" }), analyticsData ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.totalPosts }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Total Posts Analyzed" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.uniqueAuthors }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Unique Authors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.avgEngagement.toFixed(1) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Avg. Engagement" })] }) })] }) })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "No analytics data available yet. Start browsing LinkedIn to collect data." }))] }), analyticsData && analyticsData.topAuthors.length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Top Authors by Frequency" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "Authors you see most often in your feed" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_27__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_28__["default"], { size: "small", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_29__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Author" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { align: "right", children: "Times Seen" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { align: "right", children: "Avg. Engagement" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: analyticsData.topAuthors.slice(0, 10).map((author, index) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: author.name }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { align: "right", children: author.postCount }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { align: "right", children: author.avgEngagement })] }, index))) })] }) })] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", children: "Export Analytics Data" }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', gap: 2 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: () => exportAnalytics('csv'), children: "Export as CSV" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: () => exportAnalytics('json'), children: "Export as JSON" })] })] })] })), tabValue === 2 && !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Extension Debug Information" }), debugData ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: debugData.stats.total }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Total Errors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "error", children: debugData.stats.last24Hours }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Last 24 Hours" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "warning.main", children: debugData.stats.bySeverity.critical || 0 }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Critical Errors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "success.main", children: chrome.runtime.getManifest().version }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Extension Version" })] }) })] }), Object.keys(debugData.stats.byComponent).length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Errors by Component" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 2, children: Object.entries(debugData.stats.byComponent).map(([component, count]) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 6, md: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 2, textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", color: "primary", children: count }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { textTransform: 'capitalize' }, children: component })] }) }, component))) })] }))] })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Loading debug information..." }))] }), debugData && debugData.errors.length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", children: "Recent Errors" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', gap: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", onClick: exportErrorLogs, children: "Export Logs" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", color: "error", onClick: clearErrorLogs, children: "Clear All" })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_27__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_28__["default"], { size: "small", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_29__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Time" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Component" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Operation" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Severity" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Error" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: "Context" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: debugData.errors.slice(0, 20).map((error) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", children: new Date(error.timestamp).toLocaleString() }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { textTransform: 'capitalize' }, children: error.component }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", children: error.operation }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: error.severity === 'critical' ? 'error' :
+                                                    }, label: "Ollama Model", children: ollamaModels.map((model) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_28__["default"], { value: model, children: model }, model))) })] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "subtitle2", gutterBottom: true, sx: { mt: 3 }, children: "Inference Settings" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Max Tokens" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Controls the maximum length of the AI's analysis. Higher values mean more detailed analysis but slower processing.", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: modelSettings.inferenceSettings.maxTokens, onChange: (_, value) => handleModelSettingChange('maxTokens', value), min: 50, max: 500, step: 50, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 100. Increase for more detailed analysis, decrease for faster processing." })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { gutterBottom: true, children: "Temperature" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: "Controls how creative or conservative the AI's analysis is. Lower values mean more consistent ratings.", children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "caption", color: "text.secondary", children: "\u2139\uFE0F What's this?" }) })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_19__["default"], { value: modelSettings.inferenceSettings.temperature, onChange: (_, value) => handleModelSettingChange('temperature', value), min: 0, max: 1, step: 0.1, marks: true, valueLabelDisplay: "auto" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", mt: 1, children: "Recommended: 0.7. Lower values (0.1-0.3) for more consistent ratings." })] })] })] }) })] })), tabValue === 1 && !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Feed Analytics Overview" }), analyticsData ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.totalPosts }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Total Posts Analyzed" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.uniqueAuthors }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Unique Authors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 4, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: analyticsData.avgEngagement.toFixed(1) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Avg. Engagement" })] }) })] }) })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "No analytics data available yet. Start browsing LinkedIn to collect data." }))] }), analyticsData && analyticsData.topAuthors.length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Top Authors by Frequency" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", sx: { mb: 2 }, children: "Authors you see most often in your feed" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_29__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { size: "small", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Author" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { align: "right", children: "Times Seen" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { align: "right", children: "Avg. Engagement" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_34__["default"], { children: analyticsData.topAuthors.slice(0, 10).map((author, index) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: author.name }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { align: "right", children: author.postCount }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { align: "right", children: author.avgEngagement })] }, index))) })] }) })] })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", children: "Export Analytics Data" }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', gap: 2 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: () => exportAnalytics('csv'), children: "Export as CSV" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: () => exportAnalytics('json'), children: "Export as JSON" })] })] })] })), tabValue === 2 && !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Extension Debug Information" }), debugData ? ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.Fragment, { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 3, sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "primary", children: debugData.stats.total }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Total Errors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "error", children: debugData.stats.last24Hours }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Last 24 Hours" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "warning.main", children: debugData.stats.bySeverity.critical || 0 }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Critical Errors" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h3", color: "success.main", children: chrome.runtime.getManifest().version }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", children: "Extension Version" })] }) })] }), Object.keys(debugData.stats.byComponent).length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", gutterBottom: true, children: "Errors by Component" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { container: true, spacing: 2, children: Object.entries(debugData.stats.byComponent).map(([component, count]) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_7__["default"], { item: true, xs: 6, md: 3, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 2, textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h5", color: "primary", children: count }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { textTransform: 'capitalize' }, children: component })] }) }, component))) })] }))] })) : ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "Loading debug information..." }))] }), debugData && debugData.errors.length > 0 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, mb: 3 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", children: "Recent Errors" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', gap: 1 }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", onClick: exportErrorLogs, children: "Export Logs" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", size: "small", color: "error", onClick: clearErrorLogs, children: "Clear All" })] })] }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_29__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_30__["default"], { size: "small", children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Time" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Component" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Operation" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Severity" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Error" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: "Context" })] }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_34__["default"], { children: debugData.errors.slice(0, 20).map((error) => ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_32__["default"], { children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", children: new Date(error.timestamp).toLocaleString() }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { textTransform: 'capitalize' }, children: error.component }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", children: error.operation }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: error.severity === 'critical' ? 'error' :
                                                                 error.severity === 'high' ? 'warning.main' :
-                                                                    error.severity === 'medium' ? 'info.main' : 'text.secondary', sx: { textTransform: 'uppercase', fontWeight: 'bold' }, children: error.severity }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: error.error.stack || error.error.message, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: error.error.message }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_31__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: error.context?.url ? new URL(error.context.url).hostname :
+                                                                    error.severity === 'medium' ? 'info.main' : 'text.secondary', sx: { textTransform: 'uppercase', fontWeight: 'bold' }, children: error.severity }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_18__["default"], { title: error.error.stack || error.error.message, children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: error.error.message }) }) }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_33__["default"], { children: (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", sx: { maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, children: error.context?.url ? new URL(error.context.url).hostname :
                                                                 error.context?.platform ||
                                                                     'N/A' }) })] }, error.id))) })] }) }), debugData.errors.length > 20 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body2", color: "text.secondary", sx: { mt: 2, textAlign: 'center' }, children: ["Showing 20 most recent errors out of ", debugData.errors.length, " total"] }))] })), (!debugData || debugData.errors.length === 0) && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_15__["default"], { sx: { p: 3, textAlign: 'center' }, children: [(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "h6", color: "success.main", gutterBottom: true, children: "\uD83C\uDF89 No Errors Found!" }), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_6__["default"], { variant: "body1", color: "text.secondary", children: "The extension is running smoothly without any logged errors." })] }))] })), ((isSetupMode && setupStep === 1) || !isSetupMode) && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsxs)(_mui_material__WEBPACK_IMPORTED_MODULE_5__["default"], { sx: { display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }, children: [isSetupMode && setupStep === 1 && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: () => setSetupStep(0), children: "Back" })), !isSetupMode && ((0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "outlined", onClick: handleCancel, children: "Cancel" })), (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_mui_material__WEBPACK_IMPORTED_MODULE_14__["default"], { variant: "contained", color: "primary", onClick: handleSave, children: isSetupMode ? 'Complete Setup' : 'Save Settings' })] }))] }));
 };

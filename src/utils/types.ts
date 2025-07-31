@@ -25,6 +25,8 @@ export interface ContentRating {
   userPreferences: UserPreferences;
   contentType?: ContentClassification;
   timestamp: number;
+  isAIGenerated?: boolean;  // Flag to indicate if content appears to be AI-generated
+  aiConfidence?: number;  // Confidence level of AI detection (0-1)
 }
 
 export interface ContentClassification {
@@ -77,6 +79,10 @@ export interface FilterSettings {
     userPreferences: number;
   };
   defaultViewMode?: 'expanded' | 'condensed';  // Default view mode for rating overlays
+  userPrompt?: string;  // Custom user preferences for content analysis
+  interestKeywords?: string[];  // Keywords for topics of interest
+  avoidKeywords?: string[];  // Keywords for topics to avoid
+  preferOriginalContent?: boolean;  // Prefer original vs. reshared content
 }
 
 export interface ModelSettings {

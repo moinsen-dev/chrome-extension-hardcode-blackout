@@ -722,6 +722,35 @@ const snackbarStyles = `
   to { transform: rotate(360deg); }
 }
 
+/* AI-generated indicator */
+.blackout-ai-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff9800;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 10;
+  cursor: help;
+  transition: transform 0.2s;
+}
+
+.blackout-ai-indicator:hover {
+  transform: scale(1.1);
+}
+
+.blackout-ai-indicator::after {
+  content: "🤖";
+}
+
 /* Action buttons styling */
 .blackout-actions {
   display: flex;
@@ -1691,10 +1720,12 @@ class PostDetector {
                 rating: response?.rating,
                 fallback: response?.fallback,
                 cached: response?.cached,
-                error: chrome.runtime.lastError?.message
+                error: chrome.runtime.lastError?.message,
+                isAIGenerated: response?.isAIGenerated,
+                aiConfidence: response?.aiConfidence
             });
             if (response && response.rating) {
-                this.updateRatingDisplay(overlay, response.rating, response.fallback, response.contentType);
+                this.updateRatingDisplay(overlay, response.rating, response.fallback, response.contentType, response.isAIGenerated, response.aiConfidence);
                 this.updateStats(document.querySelectorAll('[data-blackout-processed]').length);
                 // Store debug info if available
                 if (response.debugInfo) {
@@ -1706,7 +1737,7 @@ class PostDetector {
             }
         });
     }
-    async updateRatingDisplay(overlay, rating, isFallback = false, contentType) {
+    async updateRatingDisplay(overlay, rating, isFallback = false, contentType, isAIGenerated, aiConfidence) {
         const scoreElement = overlay.querySelector('.blackout-score');
         const categoryElement = overlay.querySelector('.blackout-category');
         const ratingContainer = overlay.querySelector('.blackout-rating');
@@ -1734,7 +1765,10 @@ class PostDetector {
         `;
             }
             scoreElement.innerHTML = `
-        <div style="font-size: 28px; line-height: 1;">${rating}</div>
+        <div style="font-size: 28px; line-height: 1; position: relative;">
+          ${rating}
+          ${isAIGenerated && aiConfidence && aiConfidence > 0.7 ? `<div class="blackout-ai-indicator" title="AI-generated content detected (${Math.round(aiConfidence * 100)}% confidence)"></div>` : ''}
+        </div>
         <div style="font-size: 11px; font-weight: normal; margin-top: 2px; opacity: 0.8;">${qualityLabel}</div>
       `;
             scoreElement.className = `blackout-score score-${Math.floor(rating / 20) * 20}${isFallback ? ' fallback' : ''}`;
