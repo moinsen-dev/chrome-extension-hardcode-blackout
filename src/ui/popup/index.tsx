@@ -21,10 +21,12 @@ const Popup: React.FC = () => {
     // Add listener for storage changes
     useEffect(() => {
         const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+            if (changes.extensionEnabled) {
+                setEnabled(changes.extensionEnabled.newValue);
+            }
             if (changes.settings) {
                 const newSettings = changes.settings.newValue;
                 setFilterStrength(newSettings.settings?.autoHideThreshold || 20);
-                setEnabled(newSettings.isInitialized || false);
             }
             if (changes.cachedRatings) {
                 updateStats(changes.cachedRatings.newValue);
@@ -69,10 +71,12 @@ const Popup: React.FC = () => {
 
     useEffect(() => {
         // Load initial settings and stats
-        chrome.storage.local.get(['settings', 'cachedRatings'], (result) => {
+        chrome.storage.local.get(['extensionEnabled', 'settings', 'cachedRatings'], (result) => {
+            // Default to enabled if not set
+            setEnabled(result.extensionEnabled !== false);
+            
             if (result.settings) {
                 setFilterStrength(result.settings.settings?.autoHideThreshold || 20);
-                setEnabled(result.settings.isInitialized || false);
                 
                 // Check if analytics are enabled
                 const analyticsEnabled = result.settings?.analytics?.enableFeedAnalytics ?? true;
@@ -90,15 +94,21 @@ const Popup: React.FC = () => {
         const newEnabled = !enabled;
         setEnabled(newEnabled);
 
-        chrome.storage.local.get('settings', (result) => {
-            const updatedSettings = {
-                ...result.settings,
-                isInitialized: newEnabled
-            };
-            chrome.storage.local.set({ settings: updatedSettings });
-            chrome.runtime.sendMessage({
-                type: 'UPDATE_ENABLED_STATE',
-                enabled: newEnabled
+        // Store the enabled state separately
+        chrome.storage.local.set({ extensionEnabled: newEnabled }, () => {
+            console.log('Extension enabled state updated:', newEnabled);
+            
+            // Notify all tabs to enable/disable
+            chrome.tabs.query({}, (tabs) => {
+                tabs.forEach(tab => {
+                    if (tab.id && tab.url && 
+                        (tab.url.includes('twitter.com') || 
+                         tab.url.includes('facebook.com') || 
+                         tab.url.includes('reddit.com') || 
+                         tab.url.includes('linkedin.com'))) {
+                        chrome.tabs.reload(tab.id);
+                    }
+                });
             });
         });
     };

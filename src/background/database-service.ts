@@ -208,20 +208,99 @@ export class DatabaseService {
   }
 
   async getStatistics(): Promise<{
-    totalItems: number;
-    totalAuthors: number;
-    lastCapture: string | null;
+    totalPosts: number;
+    uniqueAuthors: number;
+    avgEngagement: number;
+    topAuthors: Array<{ name: string; postCount: number; avgEngagement: number }>;
+    contentTypes: Array<{ type: string; count: number }>;
+    dailyStats: Array<{ date: string; postCount: number; avgScore: number }>;
   }> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const totalItems = this.db.exec("SELECT COUNT(*) as count FROM feed_items")[0]?.values[0][0] as number || 0;
-    const totalAuthors = this.db.exec("SELECT COUNT(*) as count FROM authors")[0]?.values[0][0] as number || 0;
-    const lastCapture = this.db.exec("SELECT MAX(captured_at) as latest FROM feed_items")[0]?.values[0][0] as string || null;
+    // Basic counts
+    const totalPosts = this.db.exec("SELECT COUNT(*) as count FROM feed_items")[0]?.values[0][0] as number || 0;
+    const uniqueAuthors = this.db.exec("SELECT COUNT(*) as count FROM authors")[0]?.values[0][0] as number || 0;
+    
+    // Average engagement
+    const avgEngagementResult = this.db.exec(`
+      SELECT AVG(reaction_count + comment_count + repost_count) as avg_engagement 
+      FROM feed_items
+    `)[0];
+    const avgEngagement = avgEngagementResult?.values[0][0] as number || 0;
+    
+    // Top authors with post count and average engagement
+    const topAuthorsResult = this.db.exec(`
+      SELECT 
+        a.name,
+        COUNT(f.id) as post_count,
+        AVG(f.reaction_count + f.comment_count + f.repost_count) as avg_engagement
+      FROM authors a
+      JOIN feed_items f ON a.id = f.author_id
+      GROUP BY a.id, a.name
+      ORDER BY post_count DESC
+      LIMIT 10
+    `)[0];
+    
+    const topAuthors: Array<{ name: string; postCount: number; avgEngagement: number }> = [];
+    if (topAuthorsResult) {
+      topAuthorsResult.values.forEach((row: any[]) => {
+        topAuthors.push({
+          name: row[0] as string,
+          postCount: row[1] as number,
+          avgEngagement: Math.round(row[2] as number || 0)
+        });
+      });
+    }
+    
+    // Content type distribution
+    const contentTypesResult = this.db.exec(`
+      SELECT post_type, COUNT(*) as count
+      FROM feed_items
+      WHERE post_type IS NOT NULL
+      GROUP BY post_type
+      ORDER BY count DESC
+    `)[0];
+    
+    const contentTypes: Array<{ type: string; count: number }> = [];
+    if (contentTypesResult) {
+      contentTypesResult.values.forEach((row: any[]) => {
+        contentTypes.push({
+          type: row[0] as string,
+          count: row[1] as number
+        });
+      });
+    }
+    
+    // Daily stats (last 7 days)
+    const dailyStatsResult = this.db.exec(`
+      SELECT 
+        DATE(captured_at) as date,
+        COUNT(*) as post_count,
+        AVG(reaction_count + comment_count + repost_count) as avg_score
+      FROM feed_items
+      WHERE captured_at >= datetime('now', '-7 days')
+      GROUP BY DATE(captured_at)
+      ORDER BY date DESC
+    `)[0];
+    
+    const dailyStats: Array<{ date: string; postCount: number; avgScore: number }> = [];
+    if (dailyStatsResult) {
+      dailyStatsResult.values.forEach((row: any[]) => {
+        dailyStats.push({
+          date: row[0] as string,
+          postCount: row[1] as number,
+          avgScore: Math.round(row[2] as number || 0)
+        });
+      });
+    }
     
     return {
-      totalItems,
-      totalAuthors,
-      lastCapture
+      totalPosts,
+      uniqueAuthors,
+      avgEngagement: Math.round(avgEngagement),
+      topAuthors,
+      contentTypes,
+      dailyStats
     };
   }
 

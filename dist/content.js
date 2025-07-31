@@ -111,16 +111,22 @@ class FeedAnalyzer {
                 console.warn('Failed to extract data from feed item');
                 return;
             }
-            // Send to background script for storage
-            const response = await chrome.runtime.sendMessage({
-                type: 'FEED_ITEM_DETECTED',
-                data: feedData
-            });
-            if (response.success) {
-                console.log(`Feed item processed: ${response.result.status} - ${feedData.id}`);
+            // Send to background script for storage with proper error handling
+            try {
+                const response = await chrome.runtime.sendMessage({
+                    type: 'FEED_ITEM_DETECTED',
+                    data: feedData
+                });
+                if (response && response.success) {
+                    console.log(`Feed item processed: ${response.result?.status} - ${feedData.id}`);
+                }
+                else if (response) {
+                    console.error('Failed to store feed item:', response.error);
+                }
             }
-            else {
-                console.error('Failed to store feed item:', response.error);
+            catch (msgError) {
+                // Handle case where background script doesn't respond
+                console.warn('Background script did not respond to FEED_ITEM_DETECTED:', msgError);
             }
         }
         catch (error) {
@@ -293,6 +299,207 @@ class FeedAnalyzer {
 const feedAnalyzer = new FeedAnalyzer();
 
 
+/***/ }),
+
+/***/ "./src/utils/error-logger.ts":
+/*!***********************************!*\
+  !*** ./src/utils/error-logger.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ErrorLogger: () => (/* binding */ ErrorLogger),
+/* harmony export */   errorLogger: () => (/* binding */ errorLogger)
+/* harmony export */ });
+class ErrorLogger {
+    static instance;
+    maxErrors = 100; // Maximum number of errors to store
+    storageKey = 'extensionErrors';
+    constructor() { }
+    static getInstance() {
+        if (!ErrorLogger.instance) {
+            ErrorLogger.instance = new ErrorLogger();
+        }
+        return ErrorLogger.instance;
+    }
+    /**
+     * Log an error with context information
+     */
+    async logError(component, operation, error, severity = 'medium', context) {
+        try {
+            const extensionError = {
+                id: this.generateId(),
+                timestamp: Date.now(),
+                component,
+                operation,
+                severity,
+                error: {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                },
+                context: {
+                    ...context,
+                    url: typeof window !== 'undefined' ? window.location.href : undefined,
+                    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+                    extensionVersion: chrome.runtime.getManifest().version
+                }
+            };
+            await this.storeError(extensionError);
+            // Also log to console for immediate debugging
+            console.error(`[${component}] ${operation}:`, error, context);
+        }
+        catch (storageError) {
+            // Fallback: at least log to console if storage fails
+            console.error('Failed to store error log:', storageError);
+            console.error(`[${component}] ${operation}:`, error, context);
+        }
+    }
+    /**
+     * Log a simple message as an error
+     */
+    async logMessage(component, operation, message, severity = 'medium', context) {
+        const error = new Error(message);
+        await this.logError(component, operation, error, severity, context);
+    }
+    /**
+     * Get all stored errors
+     */
+    async getErrors() {
+        try {
+            const result = await chrome.storage.local.get(this.storageKey);
+            return result[this.storageKey] || [];
+        }
+        catch (error) {
+            console.error('Failed to retrieve error logs:', error);
+            return [];
+        }
+    }
+    /**
+     * Get errors filtered by component
+     */
+    async getErrorsByComponent(component) {
+        const errors = await this.getErrors();
+        return errors.filter(err => err.component === component);
+    }
+    /**
+     * Get errors filtered by severity
+     */
+    async getErrorsBySeverity(severity) {
+        const errors = await this.getErrors();
+        return errors.filter(err => err.severity === severity);
+    }
+    /**
+     * Clear all stored errors
+     */
+    async clearErrors() {
+        try {
+            await chrome.storage.local.remove(this.storageKey);
+        }
+        catch (error) {
+            console.error('Failed to clear error logs:', error);
+        }
+    }
+    /**
+     * Clear errors older than specified days
+     */
+    async clearOldErrors(daysOld = 7) {
+        try {
+            const errors = await this.getErrors();
+            const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
+            const recentErrors = errors.filter(err => err.timestamp > cutoffTime);
+            await chrome.storage.local.set({ [this.storageKey]: recentErrors });
+        }
+        catch (error) {
+            console.error('Failed to clear old error logs:', error);
+        }
+    }
+    /**
+     * Get error statistics
+     */
+    async getErrorStats() {
+        const errors = await this.getErrors();
+        const last24Hours = Date.now() - (24 * 60 * 60 * 1000);
+        const stats = {
+            total: errors.length,
+            byComponent: {},
+            bySeverity: {},
+            last24Hours: errors.filter(err => err.timestamp > last24Hours).length
+        };
+        errors.forEach(err => {
+            stats.byComponent[err.component] = (stats.byComponent[err.component] || 0) + 1;
+            stats.bySeverity[err.severity] = (stats.bySeverity[err.severity] || 0) + 1;
+        });
+        return stats;
+    }
+    /**
+     * Store error in Chrome storage
+     */
+    async storeError(error) {
+        const errors = await this.getErrors();
+        errors.unshift(error); // Add to beginning of array (most recent first)
+        // Keep only the most recent errors
+        if (errors.length > this.maxErrors) {
+            errors.splice(this.maxErrors);
+        }
+        await chrome.storage.local.set({ [this.storageKey]: errors });
+    }
+    /**
+     * Generate a unique ID for the error
+     */
+    generateId() {
+        return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    /**
+     * Wrap a function to automatically log errors
+     */
+    wrapAsync(component, operation, fn) {
+        return async (...args) => {
+            try {
+                return await fn(...args);
+            }
+            catch (error) {
+                await this.logError(component, operation, error, 'high', { args });
+                throw error; // Re-throw to maintain original behavior
+            }
+        };
+    }
+    /**
+     * Wrap a synchronous function to automatically log errors
+     */
+    wrapSync(component, operation, fn) {
+        return (...args) => {
+            try {
+                return fn(...args);
+            }
+            catch (error) {
+                // Use setTimeout to avoid blocking synchronous execution
+                setTimeout(() => {
+                    this.logError(component, operation, error, 'high', { args });
+                }, 0);
+                throw error; // Re-throw to maintain original behavior
+            }
+        };
+    }
+}
+// Export a singleton instance
+const errorLogger = ErrorLogger.getInstance();
+// Global error handler for unhandled errors
+if (typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => {
+        errorLogger.logError('global', 'unhandled-error', event.error || new Error(event.message), 'critical', {
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno
+        });
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        errorLogger.logError('global', 'unhandled-promise-rejection', event.reason instanceof Error ? event.reason : new Error(String(event.reason)), 'critical');
+    });
+}
+
+
 /***/ })
 
 /******/ 	});
@@ -362,12 +569,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   PostDetector: () => (/* binding */ PostDetector)
 /* harmony export */ });
 /* harmony import */ var _feed_analyzer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./feed-analyzer */ "./src/content/feed-analyzer.ts");
+/* harmony import */ var _utils_error_logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/error-logger */ "./src/utils/error-logger.ts");
+
 
 // Add snackbar styles
 const snackbarStyles = `
 .blackout-rating-overlay {
   position: absolute;
-  top: 40px;
+  top: 90px;
   right: 8px;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -376,7 +585,7 @@ const snackbarStyles = `
 /* Responsive positioning for smaller posts */
 @media (max-height: 200px) {
   .blackout-rating-overlay {
-    top: 20px;
+    top: 70px;
   }
 }
 
@@ -392,6 +601,29 @@ const snackbarStyles = `
   backdrop-filter: blur(8px);
   color: white;
   transition: all 0.3s ease;
+}
+
+/* Condensed/minimized view */
+.blackout-rating.condensed {
+  padding: 6px 8px;
+  min-width: 60px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.blackout-rating.condensed .blackout-score {
+  min-height: auto;
+  padding: 4px 6px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.blackout-rating.condensed .blackout-category,
+.blackout-rating.condensed .blackout-actions,
+.blackout-rating.condensed .blackout-feedback {
+  display: none;
 }
 
 /* Rating Score Styles */
@@ -700,6 +932,111 @@ const snackbarStyles = `
   opacity: 1;
 }
 
+/* Debug button styles */
+.blackout-debug-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.blackout-debug-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Debug popup styles */
+.blackout-debug-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(33, 33, 33, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 80vw;
+  max-height: 80vh;
+  overflow: auto;
+  z-index: 10000;
+  color: white;
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.blackout-debug-popup h3 {
+  margin: 0 0 15px 0;
+  color: #4CAF50;
+  font-size: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+}
+
+.blackout-debug-section {
+  margin-bottom: 20px;
+}
+
+.blackout-debug-section h4 {
+  color: #2196F3;
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.blackout-debug-content {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.blackout-debug-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.blackout-debug-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.blackout-debug-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+}
+
 /* Status indicator styles */
 .blackout-status-indicator {
   position: fixed;
@@ -840,6 +1177,84 @@ const snackbarStyles = `
 .blackout-warning-severe .blackout-warning-label {
   background-color: #EF5350;
 }
+
+/* Toggle button for minimize/maximize */
+.blackout-toggle {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.blackout-toggle:hover {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* User feedback buttons */
+.blackout-feedback {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.blackout-feedback-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+}
+
+.blackout-feedback-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.blackout-feedback-btn.positive {
+  color: #4CAF50;
+}
+
+.blackout-feedback-btn.negative {
+  color: #F44336;
+}
+
+.blackout-feedback-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Classification icon in condensed mode */
+.blackout-category-icon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.blackout-rating.condensed .blackout-category-icon {
+  font-size: 14px;
+  margin-right: 2px;
+}
 `;
 // Content type icon mapping
 function getContentTypeIcon(category) {
@@ -863,6 +1278,7 @@ class PostDetector {
     observer;
     statusIndicator = null;
     snackbar = null;
+    debugData = new Map();
     constructor() {
         console.log('PostDetector: Initializing on', window.location.hostname);
         this.injectStyles();
@@ -976,73 +1392,173 @@ class PostDetector {
         if (!this.platform)
             return null;
         try {
-            const id = element.getAttribute('data-testid') ||
-                element.getAttribute('id') ||
-                Math.random().toString(36);
+            // Try to find a unique ID from various sources
+            let id = element.getAttribute('data-testid') ||
+                element.id ||
+                element.getAttribute('data-id');
+            // For LinkedIn, try to extract ID from child elements
+            if (!id && this.platform === 'linkedin') {
+                // Try to find ID from ember elements or other data attributes
+                const emberElement = element.querySelector('[id^="ember"]');
+                if (emberElement) {
+                    id = 'linkedin-' + emberElement.id;
+                }
+                else {
+                    // Look for data-id in child elements
+                    const dataIdElement = element.querySelector('[data-id]');
+                    if (dataIdElement) {
+                        id = dataIdElement.getAttribute('data-id') || '';
+                    }
+                }
+            }
+            // If still no ID, generate a unique one based on content hash
+            if (!id) {
+                const contentHash = element.textContent?.substring(0, 50) || '';
+                id = 'post-' + this.platform + '-' + Date.now() + '-' +
+                    contentHash.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0).toString(36);
+            }
             let content = '';
             let author = '';
-            let metadata = {};
+            let title = '';
+            const contextualInfo = {};
             switch (this.platform) {
-                case 'twitter':
+                case 'twitter': {
                     content = element.querySelector('[data-testid="tweetText"]')?.textContent || '';
                     author = element.querySelector('[data-testid="User-Name"]')?.textContent || '';
-                    // Check for promoted tweets
-                    metadata.isSponsored = element.querySelector('[data-testid="tweet-text-show-more-link"]')?.textContent?.includes('Promoted') || false;
-                    break;
-                case 'facebook':
-                    content = element.querySelector('.userContent')?.textContent || '';
-                    author = element.querySelector('.profileLink')?.textContent || '';
-                    // Check for sponsored posts
-                    metadata.isSponsored = element.querySelector('.uiStreamSponsoredLink')?.textContent?.includes('Sponsored') || false;
-                    break;
-                case 'reddit':
-                    content = element.querySelector('[data-testid="post-content"]')?.textContent || '';
-                    author = element.querySelector('.author')?.textContent || '';
-                    // Check for promoted posts
-                    metadata.isSponsored = element.querySelector('.promotedlink')?.textContent?.includes('promoted') || false;
-                    break;
-                case 'linkedin':
-                    // Extract multiple content elements for comprehensive analysis
-                    const mainText = element.querySelector('.feed-shared-text')?.textContent || '';
-                    const articleTitle = element.querySelector('.feed-shared-article__title')?.textContent || '';
-                    const articleDescription = element.querySelector('.feed-shared-article__description')?.textContent || '';
-                    const reshareCommentary = element.querySelector('.feed-shared-update-v2__commentary')?.textContent || '';
-                    const sharedText = element.querySelector('.feed-shared-text-view')?.textContent || '';
-                    // Combine all text elements
-                    content = [mainText, reshareCommentary, articleTitle, articleDescription, sharedText]
-                        .filter(text => text && text.trim())
-                        .join(' | ');
-                    // Get author information
-                    author = element.querySelector('.feed-shared-actor__name')?.textContent ||
-                        element.querySelector('.feed-shared-actor__title')?.textContent || '';
-                    // LinkedIn specific metadata
-                    metadata.isSponsored = element.querySelector('.feed-shared-actor__description')?.textContent?.includes('Promoted') ||
-                        element.querySelector('.feed-shared-text-view__text-mention')?.textContent?.includes('Sponsored') ||
-                        false;
-                    // Check if it's a company account (has followers count)
-                    metadata.isCompanyAccount = element.querySelector('.feed-shared-actor__description')?.textContent?.includes('followers') || false;
-                    // Check for external links
-                    metadata.hasExternalLinks = element.querySelector('.feed-shared-article__link-container') !== null ||
-                        element.querySelector('.feed-shared-external-video__meta') !== null;
-                    if (metadata.isSponsored) {
-                        content = '[SPONSORED] ' + content;
+                    // Extract contextual info
+                    contextualInfo.postType = element.querySelector('[data-testid="retweet"]') ? 'repost' : 'original';
+                    contextualInfo.hasMedia = element.querySelector('[data-testid="tweetPhoto"], video') !== null;
+                    contextualInfo.hasLinks = element.querySelector('a[href*="://"]') !== null;
+                    // Get engagement metrics if available
+                    const likes = element.querySelector('[data-testid="like"]')?.getAttribute('aria-label');
+                    const retweets = element.querySelector('[data-testid="retweet"]')?.getAttribute('aria-label');
+                    if (likes || retweets) {
+                        contextualInfo.engagementMetrics = {
+                            likes: likes ? parseInt(likes.match(/\d+/)?.[0] || '0') : undefined,
+                            shares: retweets ? parseInt(retweets.match(/\d+/)?.[0] || '0') : undefined
+                        };
                     }
                     break;
+                }
+                case 'facebook': {
+                    content = element.querySelector('.userContent')?.textContent || '';
+                    author = element.querySelector('.profileLink')?.textContent || '';
+                    // Extract contextual info
+                    contextualInfo.postType = element.querySelector('.shareUnit') ? 'repost' : 'original';
+                    contextualInfo.hasMedia = element.querySelector('img, video') !== null;
+                    contextualInfo.hasLinks = element.querySelector('a[href*="://"]') !== null;
+                    break;
+                }
+                case 'reddit': {
+                    content = element.querySelector('[data-testid="post-content"]')?.textContent || '';
+                    author = element.querySelector('.author')?.textContent || '';
+                    title = element.querySelector('[data-testid="post-title"]')?.textContent || '';
+                    // Extract contextual info
+                    contextualInfo.postType = 'original';
+                    contextualInfo.hasMedia = element.querySelector('img, video') !== null;
+                    contextualInfo.hasLinks = element.querySelector('a[href*="://"]') !== null;
+                    // Get engagement metrics
+                    const upvotes = element.querySelector('[aria-label*="upvote"]')?.textContent;
+                    const redditComments = element.querySelector('[aria-label*="comment"]')?.textContent;
+                    if (upvotes || redditComments) {
+                        contextualInfo.engagementMetrics = {
+                            likes: upvotes ? parseInt(upvotes.match(/\d+/)?.[0] || '0') : undefined,
+                            comments: redditComments ? parseInt(redditComments.match(/\d+/)?.[0] || '0') : undefined
+                        };
+                    }
+                    break;
+                }
+                case 'linkedin': {
+                    // Extract content from the new LinkedIn HTML structure
+                    // Look for the main commentary/text content
+                    const updateCommentary = element.querySelector('.update-components-text')?.textContent || '';
+                    const feedSharedText = element.querySelector('.feed-shared-inline-show-more-text')?.textContent || '';
+                    const articleTitle = element.querySelector('.feed-shared-article__title')?.textContent || '';
+                    const articleDescription = element.querySelector('.feed-shared-article__description')?.textContent || '';
+                    // Combine all text content, prioritizing the main commentary
+                    content = updateCommentary || feedSharedText ||
+                        [articleTitle, articleDescription].filter(text => text && text.trim()).join(' | ') ||
+                        '';
+                    // Remove "mehr" (more) button text if present
+                    content = content.replace(/…\s*mehr$/, '').trim();
+                    // Separate title from content
+                    title = articleTitle || '';
+                    // Get author information from the new structure
+                    const actorTitle = element.querySelector('.update-components-actor__title');
+                    if (actorTitle) {
+                        // Extract author name from the structured span elements
+                        author = actorTitle.querySelector('span[dir="ltr"] span:not(.visually-hidden)')?.textContent?.trim() || '';
+                    }
+                    if (!author) {
+                        // Fallback to old selectors
+                        author = element.querySelector('.feed-shared-actor__name')?.textContent ||
+                            element.querySelector('.feed-shared-actor__title')?.textContent || '';
+                    }
+                    // Get author description/profile
+                    const authorDescription = element.querySelector('.update-components-actor__description')?.textContent?.trim() ||
+                        element.querySelector('.feed-shared-actor__description')?.textContent || '';
+                    // Extract rich contextual information
+                    contextualInfo.authorProfile = authorDescription;
+                    contextualInfo.postType = element.querySelector('.feed-shared-update-v2__commentary') ? 'repost' :
+                        element.querySelector('.feed-shared-article__title') ? 'article' :
+                            element.querySelector('video') ? 'video' :
+                                element.querySelector('.feed-shared-document') ? 'document' : 'status';
+                    contextualInfo.hasMedia = element.querySelector('img, video') !== null;
+                    contextualInfo.hasLinks = element.querySelector('.feed-shared-article__link-container, .feed-shared-external-video__meta') !== null;
+                    // Get engagement metrics
+                    const reactions = element.querySelector('.social-counts-reactions__count')?.textContent;
+                    const linkedinComments = element.querySelector('.social-counts-comments')?.textContent;
+                    if (reactions || linkedinComments) {
+                        contextualInfo.engagementMetrics = {
+                            likes: reactions ? parseInt(reactions.match(/\d+/)?.[0] || '0') : undefined,
+                            comments: linkedinComments ? parseInt(linkedinComments.match(/\d+/)?.[0] || '0') : undefined
+                        };
+                    }
+                    // Store platform-specific data for AI analysis
+                    // Check for sponsored indicators in multiple languages
+                    const allText = [
+                        authorDescription,
+                        element.querySelector('.feed-shared-text-view__text-mention')?.textContent || '',
+                        element.querySelector('.feed-shared-actor__description')?.textContent || '',
+                        // Check common LinkedIn sponsored post indicators
+                        element.textContent || ''
+                    ].join(' ').toLowerCase();
+                    contextualInfo.platformSpecific = {
+                        hasPromotedTag: allText.includes('promoted') ||
+                            allText.includes('sponsored') ||
+                            allText.includes('anzeige') ||
+                            allText.includes('gesponsert') ||
+                            allText.includes('beworben') ||
+                            allText.includes('werbung') ||
+                            allText.includes('publicité') ||
+                            allText.includes('sponsorisé'),
+                        hasFollowersInfo: authorDescription.includes('followers') || authorDescription.includes('follower'),
+                        hasExternalArticle: element.querySelector('.feed-shared-article__link-container') !== null
+                    };
+                    break;
+                }
             }
-            // Check for promotional CTAs in content
-            const promotionalKeywords = ['buy now', 'sign up', 'register now', 'limited offer', 'discount', 'sale', 'get yours', 'click here', 'learn more', 'download now'];
-            metadata.hasPromotionalCTA = promotionalKeywords.some(keyword => content.toLowerCase().includes(keyword));
             return {
                 id,
                 platform: this.platform,
                 content,
                 author,
+                title: title || undefined,
                 timestamp: Date.now(),
-                metadata
+                contextualInfo
             };
         }
         catch (error) {
             console.error('Error extracting post data:', error);
+            // Use setTimeout to avoid blocking since this is not an async method
+            setTimeout(() => {
+                _utils_error_logger__WEBPACK_IMPORTED_MODULE_1__.errorLogger.logError('content-script', 'extract-post-data', error, 'medium', {
+                    platform: this.platform || 'unknown',
+                    elementTagName: element.tagName,
+                    elementClasses: element.className,
+                    url: window.location.href
+                });
+            }, 0);
             return null;
         }
     }
@@ -1080,12 +1596,23 @@ class PostDetector {
         });
         // Mark as processed
         element.setAttribute('data-blackout-processed', 'true');
+        // Get user settings for default view mode
+        const settings = await this.getSettings();
+        const defaultViewMode = settings?.defaultViewMode || 'condensed';
+        const isCondensed = defaultViewMode === 'condensed';
         // Create and inject the rating overlay with loading state
         const overlay = document.createElement('div');
         overlay.className = 'blackout-rating-overlay';
         overlay.innerHTML = `
-      <div class="blackout-rating">
+      <div class="blackout-rating${isCondensed ? ' condensed' : ''}" data-post-id="${postData.id}">
+        <div class="blackout-toggle" title="${isCondensed ? 'Expand view' : 'Minimize view'}">${isCondensed ? '⋯' : '⌄'}</div>
         <div class="blackout-score loading">Analyzing</div>
+        <div class="blackout-category"></div>
+        <div class="blackout-feedback">
+          <div class="blackout-feedback-btn positive" title="Good rating">👍</div>
+          <div class="blackout-feedback-btn negative" title="Poor rating">👎</div>
+          <div class="blackout-debug-btn" title="Show AI debug info">🐛</div>
+        </div>
         <div class="blackout-actions">
           <button class="blackout-hide">Hide</button>
           <button class="blackout-block">Block</button>
@@ -1095,12 +1622,56 @@ class PostDetector {
         // Set up the overlay position
         element.style.position = 'relative';
         element.appendChild(overlay);
-        // Add click handlers and tooltips for hide/block buttons
+        // Add click handlers and tooltips for all buttons
         const hideButton = overlay.querySelector('.blackout-hide');
         const blockButton = overlay.querySelector('.blackout-block');
+        const toggleButton = overlay.querySelector('.blackout-toggle');
+        const positiveBtn = overlay.querySelector('.blackout-feedback-btn.positive');
+        const negativeBtn = overlay.querySelector('.blackout-feedback-btn.negative');
+        const debugBtn = overlay.querySelector('.blackout-debug-btn');
+        const ratingDiv = overlay.querySelector('.blackout-rating');
         // Add tooltips
         this.addTooltip(hideButton, 'Temporarily hide this post');
         this.addTooltip(blockButton, 'Permanently block similar content');
+        // Toggle button functionality (minimize/maximize)
+        let isMinimized = isCondensed; // Start with the default setting
+        toggleButton?.addEventListener('click', () => {
+            isMinimized = !isMinimized;
+            if (isMinimized) {
+                ratingDiv.classList.add('condensed');
+                toggleButton.textContent = '⋯';
+                toggleButton.title = 'Expand view';
+            }
+            else {
+                ratingDiv.classList.remove('condensed');
+                toggleButton.textContent = '⌄';
+                toggleButton.title = 'Minimize view';
+            }
+        });
+        // Feedback button functionality
+        let userFeedback = null;
+        positiveBtn?.addEventListener('click', () => {
+            userFeedback = userFeedback === 'positive' ? null : 'positive';
+            positiveBtn.classList.toggle('active', userFeedback === 'positive');
+            negativeBtn.classList.remove('active');
+            this.submitUserFeedback(postData.id, userFeedback);
+        });
+        negativeBtn?.addEventListener('click', () => {
+            userFeedback = userFeedback === 'negative' ? null : 'negative';
+            negativeBtn.classList.toggle('active', userFeedback === 'negative');
+            positiveBtn.classList.remove('active');
+            this.submitUserFeedback(postData.id, userFeedback);
+        });
+        // Debug button functionality
+        debugBtn?.addEventListener('click', () => {
+            const debugInfo = this.debugData.get(postData.id);
+            if (debugInfo) {
+                this.showDebugPopup(postData, debugInfo);
+            }
+            else {
+                this.showSnackbar('Debug info not available yet. Wait for AI analysis to complete.', 'info');
+            }
+        });
         hideButton?.addEventListener('click', () => {
             element.style.opacity = '0.1';
             element.style.transition = 'opacity 0.3s ease';
@@ -1110,7 +1681,7 @@ class PostDetector {
             chrome.runtime.sendMessage({
                 type: 'BLOCK_CONTENT',
                 post: postData
-            });
+            }).catch(err => console.warn('Failed to send BLOCK_CONTENT message:', err));
         });
         // Request rating from background script
         console.log('Sending REQUEST_RATING for post:', postData.id);
@@ -1125,6 +1696,10 @@ class PostDetector {
             if (response && response.rating) {
                 this.updateRatingDisplay(overlay, response.rating, response.fallback, response.contentType);
                 this.updateStats(document.querySelectorAll('[data-blackout-processed]').length);
+                // Store debug info if available
+                if (response.debugInfo) {
+                    this.debugData.set(postData.id, response.debugInfo);
+                }
             }
             else {
                 console.error('No rating received for post:', postData.id);
@@ -1133,6 +1708,7 @@ class PostDetector {
     }
     async updateRatingDisplay(overlay, rating, isFallback = false, contentType) {
         const scoreElement = overlay.querySelector('.blackout-score');
+        const categoryElement = overlay.querySelector('.blackout-category');
         const ratingContainer = overlay.querySelector('.blackout-rating');
         if (scoreElement) {
             // Remove loading class and update score
@@ -1149,6 +1725,14 @@ class PostDetector {
                 qualityLabel = 'Poor';
             else
                 qualityLabel = 'Very Poor';
+            // Update category display with icon
+            if (categoryElement && contentType) {
+                const icon = getContentTypeIcon(contentType.category);
+                categoryElement.innerHTML = `
+          <span class="blackout-category-icon">${icon}</span>
+          <span class="blackout-category-text">${contentType.category}</span>
+        `;
+            }
             scoreElement.innerHTML = `
         <div style="font-size: 28px; line-height: 1;">${rating}</div>
         <div style="font-size: 11px; font-weight: normal; margin-top: 2px; opacity: 0.8;">${qualityLabel}</div>
@@ -1244,7 +1828,7 @@ class PostDetector {
             type: 'UPDATE_ICON_STATE',
             active: true,
             platform: this.platform
-        });
+        }).catch(err => console.warn('Failed to send UPDATE_ICON_STATE message:', err));
     }
     stop() {
         this.observer.disconnect();
@@ -1254,18 +1838,167 @@ class PostDetector {
         chrome.runtime.sendMessage({
             type: 'UPDATE_ICON_STATE',
             active: false
+        }).catch(err => console.warn('Failed to send UPDATE_ICON_STATE message:', err));
+    }
+    /**
+     * Submit user feedback for a post rating
+     */
+    async submitUserFeedback(postId, feedback) {
+        try {
+            const response = await chrome.runtime.sendMessage({
+                type: 'USER_FEEDBACK',
+                postId: postId,
+                feedback: feedback,
+                timestamp: Date.now()
+            });
+            if (response && response.success) {
+                console.log(`User feedback submitted for post ${postId}: ${feedback}`);
+            }
+        }
+        catch (error) {
+            console.error('Failed to submit user feedback:', error);
+            setTimeout(() => {
+                _utils_error_logger__WEBPACK_IMPORTED_MODULE_1__.errorLogger.logError('content-script', 'submit-user-feedback', error, 'medium', {
+                    postId,
+                    feedback,
+                    url: window.location.href
+                });
+            }, 0);
+        }
+    }
+    /**
+     * Show debug popup with AI prompt and response
+     */
+    showDebugPopup(postData, debugInfo) {
+        // Remove any existing debug popup
+        const existingOverlay = document.querySelector('.blackout-debug-overlay');
+        const existingPopup = document.querySelector('.blackout-debug-popup');
+        existingOverlay?.remove();
+        existingPopup?.remove();
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'blackout-debug-overlay';
+        // Create popup
+        const popup = document.createElement('div');
+        popup.className = 'blackout-debug-popup';
+        // Format timestamp with local timezone
+        const date = new Date(debugInfo.timestamp);
+        const timeStr = date.toLocaleString('de-DE', {
+            timeZone: 'Europe/Berlin',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
         });
+        popup.innerHTML = `
+      <div class="blackout-debug-close">✕</div>
+      <h3>AI Debug Information</h3>
+      
+      <div class="blackout-debug-section">
+        <h4>Post Details</h4>
+        <div class="blackout-debug-content">
+ID: ${postData.id}
+Author: ${postData.author}
+Platform: ${postData.platform}
+Time: ${timeStr}
+Content Length: ${postData.content.length} chars
+        </div>
+      </div>
+
+      <div class="blackout-debug-section">
+        <h4>Prompt Sent to Ollama</h4>
+        <div class="blackout-debug-content">${this.escapeHtml(debugInfo.prompt)}</div>
+      </div>
+
+      <div class="blackout-debug-section">
+        <h4>AI Response</h4>
+        <div class="blackout-debug-content">${this.escapeHtml(debugInfo.response)}</div>
+      </div>
+    `;
+        // Add close handlers
+        const closeBtn = popup.querySelector('.blackout-debug-close');
+        const closePopup = () => {
+            overlay.remove();
+            popup.remove();
+        };
+        closeBtn?.addEventListener('click', closePopup);
+        overlay.addEventListener('click', closePopup);
+        // Add to DOM
+        document.body.appendChild(overlay);
+        document.body.appendChild(popup);
+    }
+    /**
+     * Show a temporary snackbar notification
+     */
+    showSnackbar(message, type = 'info') {
+        // Remove any existing snackbar
+        const existing = document.querySelector('.blackout-snackbar');
+        existing?.remove();
+        // Create snackbar
+        const snackbar = document.createElement('div');
+        snackbar.className = `blackout-snackbar blackout-snackbar-${type}`;
+        snackbar.textContent = message;
+        snackbar.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 10001;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    `;
+        document.body.appendChild(snackbar);
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            snackbar.style.opacity = '0';
+            snackbar.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => snackbar.remove(), 300);
+        }, 3000);
+    }
+    /**
+     * Escape HTML for safe display
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    /**
+     * Get user settings from storage
+     */
+    async getSettings() {
+        try {
+            const result = await chrome.storage.local.get('settings');
+            return result.settings?.settings || null;
+        }
+        catch (error) {
+            console.error('Failed to get settings:', error);
+            return null;
+        }
     }
 }
-// Initialize and start the detector
-const detector = new PostDetector();
-detector.start();
-// Initialize LinkedIn feed analytics if on LinkedIn
-if (window.location.hostname.includes('linkedin.com')) {
-    console.log('LinkedIn detected - initializing feed analytics');
-    // Check if analytics are enabled (default to true for now)
-    chrome.storage.local.get(['settings'], (result) => {
-        const analyticsEnabled = result.settings?.settings?.analytics?.enableFeedAnalytics ?? true;
+// Check if extension is enabled before starting
+chrome.storage.local.get(['extensionEnabled', 'settings'], (result) => {
+    // Default to enabled if not set
+    const extensionEnabled = result.extensionEnabled !== false;
+    if (!extensionEnabled) {
+        console.log('Hardcore Blackout extension is disabled');
+        return;
+    }
+    console.log('Hardcore Blackout extension is enabled - starting content script');
+    // Initialize and start the detector
+    const detector = new PostDetector();
+    detector.start();
+    // Initialize LinkedIn feed analytics if on LinkedIn
+    if (window.location.hostname.includes('linkedin.com')) {
+        console.log('LinkedIn detected - initializing feed analytics');
+        const analyticsEnabled = result.settings?.analytics?.enableFeedAnalytics ?? true;
         if (analyticsEnabled) {
             console.log('Starting LinkedIn feed analyzer...');
             _feed_analyzer__WEBPACK_IMPORTED_MODULE_0__.feedAnalyzer.startObserving();
@@ -1273,8 +2006,8 @@ if (window.location.hostname.includes('linkedin.com')) {
         else {
             console.log('LinkedIn feed analytics disabled in settings');
         }
-    });
-}
+    }
+});
 
 })();
 

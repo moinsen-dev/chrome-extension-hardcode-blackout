@@ -38,13 +38,22 @@ export interface Post {
   platform: 'twitter' | 'facebook' | 'reddit' | 'linkedin';
   content: string;
   author: string;
+  title?: string; // Article titles, headlines, shared content titles
   timestamp: number;
   rating?: ContentRating;
-  metadata?: {
-    isSponsored?: boolean;
-    isCompanyAccount?: boolean;
-    hasPromotionalCTA?: boolean;
-    hasExternalLinks?: boolean;
+  contextualInfo?: {
+    authorProfile?: string; // Author bio, description, verification status
+    postType?: 'original' | 'repost' | 'article' | 'video' | 'document' | 'status';
+    hasMedia?: boolean;
+    hasLinks?: boolean;
+    engagementMetrics?: {
+      likes?: number;
+      comments?: number;
+      shares?: number;
+    };
+    platformSpecific?: {
+      [key: string]: any; // Platform-specific metadata
+    };
   };
 }
 
@@ -67,6 +76,7 @@ export interface FilterSettings {
     emotionalImpact: number;
     userPreferences: number;
   };
+  defaultViewMode?: 'expanded' | 'condensed';  // Default view mode for rating overlays
 }
 
 export interface ModelSettings {

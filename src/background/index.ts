@@ -46,7 +46,8 @@ async function initializeStorage() {
         contentQuality: 0.4,
         emotionalImpact: 0.3,
         userPreferences: 0.3
-      }
+      },
+      defaultViewMode: 'condensed'  // Default to condensed view
     },
     modelSettings: {
       modelPath: 'models/default.gguf',
@@ -207,7 +208,7 @@ function createFallbackRating(): ContentRating {
 // Message handling
 chrome.runtime.onMessage.addListener(
   (
-    message: { type: string; modelType?: string; post?: Post; data?: any },
+    message: { type: string; modelType?: string; post?: Post; data?: any; postId?: string; feedback?: string; timestamp?: number; active?: boolean; platform?: string },
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ) => {
@@ -220,11 +221,12 @@ chrome.runtime.onMessage.addListener(
       
       if (!message.post) {
         console.error('No post data provided');
+        sendResponse({ rating: createFallbackRating().overallScore, fallback: true, error: 'No post data' });
         return true;
       }
       const post: Post = message.post;
 
-      // Handle the rating request asynchronously
+      // Handle the rating request asynchronously with proper error boundaries
       (async () => {
         try {
           // Get storage data
@@ -242,7 +244,7 @@ chrome.runtime.onMessage.addListener(
           // In development mode or if initialized, proceed with analysis
           if (!settings?.isInitialized && !isDevelopmentMode()) {
             console.log('Extension not initialized and not in development mode');
-            sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+            sendResponse({ rating: createFallbackRating().overallScore, fallback: true, reason: 'not_initialized' });
             return;
           }
 
@@ -257,6 +259,7 @@ chrome.runtime.onMessage.addListener(
               sendResponse({ 
                 rating: cachedRating.overallScore, 
                 contentType: cachedRating.contentType,
+                debugInfo: (cachedRating as any).debugInfo,
                 cached: true 
               });
               return;
@@ -275,7 +278,14 @@ chrome.runtime.onMessage.addListener(
             if (ollamaService.isOllamaAvailable()) {
               console.log('Using Ollama for content analysis');
               const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
-              rating = await ollamaService.analyzeContent(post, modelName);
+              
+              // Add timeout to prevent hanging requests
+              const analysisPromise = ollamaService.analyzeContent(post, modelName);
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error('Ollama request timeout')), 30000); // 30 second timeout
+              });
+              
+              rating = await Promise.race([analysisPromise, timeoutPromise]);
             } else {
               throw new Error('Ollama is not available. Please ensure Ollama is running.');
             }
@@ -309,29 +319,49 @@ chrome.runtime.onMessage.addListener(
 
             sendResponse({ 
               rating: rating.overallScore,
-              contentType: rating.contentType 
+              contentType: rating.contentType,
+              debugInfo: (rating as any).debugInfo
             });
           } catch (error) {
             console.error('Error analyzing content:', error);
             // Use fallback rating and still cache it
             const fallbackRating = createFallbackRating();
-            console.log('Using fallback rating due to error');
+            console.log('Using fallback rating due to error:', error instanceof Error ? error.message : String(error));
             
             // Cache the fallback rating too so stats are updated
             cachedRatings[post.id] = fallbackRating;
-            await chrome.storage.local.set({ cachedRatings });
+            
+            try {
+              await chrome.storage.local.set({ cachedRatings });
+            } catch (storageError) {
+              console.error('Failed to save fallback rating to cache:', storageError);
+            }
             
             sendResponse({ 
               rating: fallbackRating.overallScore, 
               contentType: fallbackRating.contentType,
-              fallback: true 
+              fallback: true,
+              error: error instanceof Error ? error.message : String(error)
             });
           }
-        } catch (error) {
-          console.error('Error in REQUEST_RATING handler:', error);
-          sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+        } catch (outerError) {
+          console.error('Critical error in REQUEST_RATING handler:', outerError);
+          // Ensure we always send a response
+          sendResponse({ 
+            rating: createFallbackRating().overallScore, 
+            fallback: true,
+            error: outerError instanceof Error ? outerError.message : String(outerError)
+          });
         }
-      })();
+      })().catch((asyncError) => {
+        // Final safety net for any unhandled promise rejections
+        console.error('Unhandled async error in REQUEST_RATING:', asyncError);
+        sendResponse({ 
+          rating: createFallbackRating().overallScore, 
+          fallback: true,
+          error: 'Unhandled async error'
+        });
+      });
 
       return true;
     }
@@ -404,6 +434,62 @@ chrome.runtime.onMessage.addListener(
         }
       })();
       return true;
+    }
+
+    if (message.type === 'USER_FEEDBACK') {
+      console.log('USER_FEEDBACK received:', {
+        postId: message.postId,
+        feedback: message.feedback
+      });
+      
+      (async () => {
+        try {
+          // Store user feedback in chrome.storage for learning
+          const result = await chrome.storage.local.get('userFeedback');
+          const feedback = result.userFeedback || {};
+          
+          if (message.postId) {
+            if (message.feedback === null) {
+              // Remove feedback if null
+              delete feedback[message.postId];
+            } else {
+              // Store feedback with timestamp
+              feedback[message.postId] = {
+                feedback: message.feedback,
+                timestamp: message.timestamp || Date.now()
+              };
+            }
+          }
+          
+          await chrome.storage.local.set({ userFeedback: feedback });
+          console.log(`User feedback stored for post ${message.postId}: ${message.feedback}`);
+          
+          sendResponse({ success: true });
+        } catch (error) {
+          console.error('Error storing user feedback:', error);
+          sendResponse({ 
+            success: false, 
+            error: error instanceof Error ? error.message : String(error) 
+          });
+        }
+      })();
+      return true;
+    }
+
+    // Handle BLOCK_CONTENT message
+    if (message.type === 'BLOCK_CONTENT') {
+      console.log('Content blocked by user:', message.post?.id);
+      // Could store blocked content for analytics
+      sendResponse({ success: true });
+      return false; // Synchronous response
+    }
+
+    // Handle UPDATE_ICON_STATE message
+    if (message.type === 'UPDATE_ICON_STATE') {
+      // Could update extension icon based on active state
+      console.log('Icon state update:', message.active ? 'active' : 'inactive');
+      sendResponse({ success: true });
+      return false; // Synchronous response
     }
 
     return true;

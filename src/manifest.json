@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hardcore Blackout",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A sophisticated Chrome extension for content filtering with local AI processing",
   "permissions": ["storage", "history", "webNavigation", "scripting"],
   "host_permissions": [

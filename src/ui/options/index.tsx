@@ -9,11 +9,14 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     Grid,
     InputLabel,
     LinearProgress,
     MenuItem,
     Paper,
+    Radio,
+    RadioGroup,
     Select,
     Slider,
     Tab,
@@ -36,6 +39,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { StorageData } from '../../utils/types';
+import { errorLogger, ExtensionError } from '../../utils/error-logger';
 
 
 
@@ -55,6 +59,15 @@ const Options: React.FC = () => {
         contentTypeDistribution: Array<{ type: string; count: number }>;
         dailyStats: Array<{ date: string; postCount: number; avgScore: number }>;
     } | null>(null);
+    const [debugData, setDebugData] = useState<{
+        errors: ExtensionError[];
+        stats: {
+            total: number;
+            byComponent: Record<string, number>;
+            bySeverity: Record<string, number>;
+            last24Hours: number;
+        };
+    } | null>(null);
 
     useEffect(() => {
         // Check if we're in setup mode
@@ -64,8 +77,10 @@ const Options: React.FC = () => {
 
         // Load settings
         chrome.storage.local.get(['settings'], (result) => {
-            setSettings(result.settings?.settings);
-            setModelSettings(result.settings?.modelSettings);
+            if (result.settings) {
+                setSettings(result.settings.settings);
+                setModelSettings(result.settings.modelSettings);
+            }
         });
 
         // Check Ollama availability
@@ -82,6 +97,10 @@ const Options: React.FC = () => {
         // Fetch analytics data when analytics tab is selected
         if (tabValue === 1) {
             fetchAnalyticsData();
+        }
+        // Fetch debug data when debug tab is selected
+        if (tabValue === 2) {
+            fetchDebugData();
         }
     }, [tabValue]);
 
@@ -104,7 +123,49 @@ const Options: React.FC = () => {
         }
     };
 
-    const handleSettingChange = (key: string, value: number) => {
+    const fetchDebugData = async () => {
+        try {
+            const errors = await errorLogger.getErrors();
+            const stats = await errorLogger.getErrorStats();
+            setDebugData({ errors, stats });
+        } catch (error) {
+            console.error('Failed to fetch debug data:', error);
+            // Try to log this error too
+            errorLogger.logError('options', 'fetch-debug-data', error as Error, 'medium');
+        }
+    };
+
+    const clearErrorLogs = async () => {
+        try {
+            await errorLogger.clearErrors();
+            await fetchDebugData(); // Refresh the display
+        } catch (error) {
+            console.error('Failed to clear error logs:', error);
+        }
+    };
+
+    const exportErrorLogs = () => {
+        if (!debugData?.errors) return;
+        
+        const errorData = {
+            exportedAt: new Date().toISOString(),
+            extensionVersion: chrome.runtime.getManifest().version,
+            errors: debugData.errors,
+            stats: debugData.stats
+        };
+        
+        const blob = new Blob([JSON.stringify(errorData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hardcore-blackout-errors-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleSettingChange = (key: string, value: number | string) => {
         if (!settings) return;
 
         const newSettings = {
@@ -112,6 +173,27 @@ const Options: React.FC = () => {
             [key]: value
         };
         setSettings(newSettings);
+    };
+
+    const handleModelSettingChange = (key: string, value: number | string) => {
+        if (!modelSettings) return;
+
+        if (key === 'maxTokens' || key === 'temperature') {
+            const newSettings = {
+                ...modelSettings,
+                inferenceSettings: {
+                    ...modelSettings.inferenceSettings,
+                    [key]: value
+                }
+            };
+            setModelSettings(newSettings);
+        } else {
+            const newSettings = {
+                ...modelSettings,
+                [key]: value
+            };
+            setModelSettings(newSettings);
+        }
     };
 
 
@@ -307,6 +389,7 @@ const Options: React.FC = () => {
                     <Tabs value={tabValue} onChange={handleTabChange}>
                         <Tab label="Settings" />
                         <Tab label="Analytics" />
+                        <Tab label="Debug" />
                     </Tabs>
                 </Box>
             )}
@@ -383,6 +466,36 @@ const Options: React.FC = () => {
                             />
                             <Typography variant="body2" color="text.secondary" mt={1}>
                                 Recommended: 80-90. Only the highest quality content will be highlighted.
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography gutterBottom>Default View Mode</Typography>
+                                <Tooltip title="Choose whether rating overlays start in expanded or condensed view">
+                                    <Typography variant="caption" color="text.secondary">
+                                        ℹ️ What&apos;s this?
+                                    </Typography>
+                                </Tooltip>
+                            </Box>
+                            <RadioGroup
+                                value={settings.defaultViewMode || 'condensed'}
+                                onChange={(e) => handleSettingChange('defaultViewMode', e.target.value)}
+                                row
+                            >
+                                <FormControlLabel 
+                                    value="condensed" 
+                                    control={<Radio />} 
+                                    label="Condensed (Recommended)" 
+                                />
+                                <FormControlLabel 
+                                    value="expanded" 
+                                    control={<Radio />} 
+                                    label="Expanded" 
+                                />
+                            </RadioGroup>
+                            <Typography variant="body2" color="text.secondary" mt={1}>
+                                Condensed view shows only the score and category icon. Click the toggle button to expand.
                             </Typography>
                         </Box>
                     </Paper>
@@ -469,7 +582,7 @@ const Options: React.FC = () => {
                                 </Box>
                                 <Slider
                                     value={modelSettings.inferenceSettings.maxTokens}
-                                    onChange={(_, value) => handleSettingChange('maxTokens', value as number)}
+                                    onChange={(_, value) => handleModelSettingChange('maxTokens', value as number)}
                                     min={50}
                                     max={500}
                                     step={50}
@@ -492,7 +605,7 @@ const Options: React.FC = () => {
                                 </Box>
                                 <Slider
                                     value={modelSettings.inferenceSettings.temperature}
-                                    onChange={(_, value) => handleSettingChange('temperature', value as number)}
+                                    onChange={(_, value) => handleModelSettingChange('temperature', value as number)}
                                     min={0}
                                     max={1}
                                     step={0.1}
@@ -545,13 +658,16 @@ const Options: React.FC = () => {
 
                     {analyticsData && analyticsData.topAuthors.length > 0 && (
                         <Paper sx={{ p: 3, mb: 3 }}>
-                            <Typography variant="h6" gutterBottom>Top Authors</Typography>
+                            <Typography variant="h6" gutterBottom>Top Authors by Frequency</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Authors you see most often in your feed
+                            </Typography>
                             <TableContainer>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>Author</TableCell>
-                                            <TableCell align="right">Posts</TableCell>
+                                            <TableCell align="right">Times Seen</TableCell>
                                             <TableCell align="right">Avg. Engagement</TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -560,7 +676,7 @@ const Options: React.FC = () => {
                                             <TableRow key={index}>
                                                 <TableCell>{author.name}</TableCell>
                                                 <TableCell align="right">{author.postCount}</TableCell>
-                                                <TableCell align="right">{author.avgEngagement.toFixed(1)}</TableCell>
+                                                <TableCell align="right">{author.avgEngagement}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -582,6 +698,164 @@ const Options: React.FC = () => {
                             </Button>
                         </Box>
                     </Paper>
+                </Box>
+            )}
+
+            {tabValue === 2 && !isSetupMode && (
+                <Box>
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" gutterBottom>Extension Debug Information</Typography>
+                        {debugData ? (
+                            <>
+                                <Grid container spacing={3} sx={{ mb: 3 }}>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h3" color="primary">{debugData.stats.total}</Typography>
+                                            <Typography variant="body2" color="text.secondary">Total Errors</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h3" color="error">{debugData.stats.last24Hours}</Typography>
+                                            <Typography variant="body2" color="text.secondary">Last 24 Hours</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h3" color="warning.main">
+                                                {debugData.stats.bySeverity.critical || 0}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">Critical Errors</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h3" color="success.main">
+                                                {chrome.runtime.getManifest().version}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">Extension Version</Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+
+                                {Object.keys(debugData.stats.byComponent).length > 0 && (
+                                    <Box sx={{ mb: 3 }}>
+                                        <Typography variant="h6" gutterBottom>Errors by Component</Typography>
+                                        <Grid container spacing={2}>
+                                            {Object.entries(debugData.stats.byComponent).map(([component, count]) => (
+                                                <Grid item xs={6} md={3} key={component}>
+                                                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                                                        <Typography variant="h5" color="primary">{count}</Typography>
+                                                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                                                            {component}
+                                                        </Typography>
+                                                    </Paper>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </Box>
+                                )}
+                            </>
+                        ) : (
+                            <Typography variant="body1" color="text.secondary">
+                                Loading debug information...
+                            </Typography>
+                        )}
+                    </Paper>
+
+                    {debugData && debugData.errors.length > 0 && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6">Recent Errors</Typography>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Button variant="outlined" size="small" onClick={exportErrorLogs}>
+                                        Export Logs
+                                    </Button>
+                                    <Button variant="outlined" size="small" color="error" onClick={clearErrorLogs}>
+                                        Clear All
+                                    </Button>
+                                </Box>
+                            </Box>
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Time</TableCell>
+                                            <TableCell>Component</TableCell>
+                                            <TableCell>Operation</TableCell>
+                                            <TableCell>Severity</TableCell>
+                                            <TableCell>Error</TableCell>
+                                            <TableCell>Context</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {debugData.errors.slice(0, 20).map((error) => (
+                                            <TableRow key={error.id}>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {new Date(error.timestamp).toLocaleString()}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                                                        {error.component}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {error.operation}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography 
+                                                        variant="body2" 
+                                                        color={
+                                                            error.severity === 'critical' ? 'error' :
+                                                            error.severity === 'high' ? 'warning.main' :
+                                                            error.severity === 'medium' ? 'info.main' : 'text.secondary'
+                                                        }
+                                                        sx={{ textTransform: 'uppercase', fontWeight: 'bold' }}
+                                                    >
+                                                        {error.severity}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Tooltip title={error.error.stack || error.error.message}>
+                                                        <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {error.error.message}
+                                                        </Typography>
+                                                    </Tooltip>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {error.context?.url ? new URL(error.context.url).hostname : 
+                                                         error.context?.platform || 
+                                                         'N/A'}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            {debugData.errors.length > 20 && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+                                    Showing 20 most recent errors out of {debugData.errors.length} total
+                                </Typography>
+                            )}
+                        </Paper>
+                    )}
+
+                    {(!debugData || debugData.errors.length === 0) && (
+                        <Paper sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="h6" color="success.main" gutterBottom>
+                                🎉 No Errors Found!
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                The extension is running smoothly without any logged errors.
+                            </Typography>
+                        </Paper>
+                    )}
                 </Box>
             )}
 

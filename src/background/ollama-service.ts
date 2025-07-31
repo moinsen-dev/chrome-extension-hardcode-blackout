@@ -1,4 +1,5 @@
 import { ContentRating, Post } from '../utils/types';
+import { errorLogger } from '../utils/error-logger';
 
 interface OllamaModel {
     name: string;
@@ -35,14 +36,12 @@ export class OllamaService {
         try {
             console.log('Checking Ollama availability at:', this.baseUrl);
             
-            // Try the /api/tags endpoint first (lists models)
+            // Try direct fetch first
             const response = await fetch(`${this.baseUrl}/api/tags`, {
                 method: 'GET',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                mode: 'cors'
+                    'Content-Type': 'application/json'
+                }
             });
             
             if (response.ok) {
@@ -58,7 +57,7 @@ export class OllamaService {
             // If CORS fails, try a simple health check
             try {
                 console.log('Initial check failed, trying alternative endpoint...');
-                const healthResponse = await fetch(`${this.baseUrl}/api/version`, {
+                await fetch(`${this.baseUrl}/api/version`, {
                     method: 'GET',
                     mode: 'no-cors' // This won't give us the response body but will tell us if the server exists
                 });
@@ -77,10 +76,17 @@ export class OllamaService {
                 return true;
             } catch (innerError) {
                 console.log('Ollama is not accessible:', innerError);
+                await errorLogger.logError('ollama-service', 'check-availability', innerError as Error, 'medium', {
+                    baseUrl: this.baseUrl,
+                    attemptType: 'fallback-health-check'
+                });
             }
         }
         
         this.isAvailable = false;
+        await errorLogger.logMessage('ollama-service', 'check-availability', 'Ollama service is unavailable', 'medium', {
+            baseUrl: this.baseUrl
+        });
         return false;
     }
 
@@ -94,33 +100,40 @@ export class OllamaService {
 
     async analyzeContent(post: Post, modelName: string = 'llama3.2'): Promise<ContentRating> {
         if (!this.isAvailable) {
-            throw new Error('Ollama service is not available');
+            const error = new Error('Ollama service is not available');
+            await errorLogger.logError('ollama-service', 'analyze-content', error, 'high', {
+                postId: post.id,
+                platform: post.platform,
+                modelName,
+                ollamaAvailable: this.isAvailable
+            });
+            throw error;
         }
 
         const prompt = this.createAnalysisPrompt(post);
         
         try {
-            const response = await fetch(`${this.baseUrl}/api/generate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: modelName,
-                    prompt: prompt,
-                    stream: false,
-                    format: 'json',
-                    system: `You are a content quality analyzer. Analyze social media posts and provide ratings in JSON format.
-                    
+            // Use Chrome extension compatible fetch for localhost
+            const requestBody = {
+                model: modelName,
+                prompt: prompt,
+                stream: false,
+                format: 'json',
+                system: `You are a multilingual content quality analyzer. Analyze social media posts in ANY language (English, German, French, Spanish, etc.) and provide consistent ratings in JSON format.
+
+IMPORTANT: You must analyze content and detect patterns regardless of language. Apply the same quality standards and classification logic to German, English, French, or any other language.
+
 Rate each aspect on a scale of 1-10:
 - Content Quality (writingQuality, informationDensity, sourceCredibility, originality)
 - Emotional Impact (toxicityLevel, emotionalManipulation, socialHarmony)
 - User Preferences (topicAlignment, sourcePreference, historicalInteraction)
 
-CONTENT CLASSIFICATION GUIDE:
+CONTENT CLASSIFICATION GUIDE (apply to any language):
 - personal: Personal stories, life updates, emotional experiences, opinions, casual conversations
-- business: Business strategies, company updates, professional insights, entrepreneurship, management tips
+- business: Business strategies, company updates, professional insights, entrepreneurship, management tips  
 - tech: Technology news, software development, IT topics, gadgets, AI/ML, cybersecurity
 - finance: Financial markets, investments, economic news, banking, cryptocurrency, trading
-- news: Current events, journalism, breaking news, media reports (NOT company PR)
+- news: Current events, journalism, breaking news, media reports from news organizations (NOT company PR)
 - entertainment: Movies, music, games, sports, celebrity news, humor, memes
 - education: Tutorials, courses, learning resources, how-to guides, academic content, skill development
 - advertisement: Product promotions, sponsored content, commercial offers, sales pitches, marketing campaigns
@@ -128,13 +141,27 @@ CONTENT CLASSIFICATION GUIDE:
 - politics: Political news, government policies, elections, political opinions, activism
 - other: Content that doesn't clearly fit other categories
 
-CLASSIFICATION SIGNALS:
-- Look for [SPONSORED] tag for advertisements
-- Check for promotional language: "Buy now", "Limited offer", "Sign up", "Get yours"
-- Company posts about products/services = advertisement
-- Individual sharing achievements = promotion
-- Teaching/explaining concepts = education
-- Product reviews by users = personal or tech/business (not advertisement)
+MULTILINGUAL CLASSIFICATION SIGNALS:
+Detect these patterns in ANY language:
+- Sponsored/promoted content indicators:
+  * English: "Sponsored", "Promoted", "Ad"
+  * German: "Anzeige", "Gesponsert", "Beworben", "Werbung"  
+  * French: "Sponsorisé", "Publicité", "Annonce"
+- Commercial language (English: "Buy now", German: "Jetzt kaufen", French: "Acheter maintenant")
+- Call-to-action phrases (English: "Sign up", German: "Hier anmelden", French: "S'inscrire")
+- Company promotional content vs. news reporting
+- Personal achievements vs. commercial advertisements
+- Educational content vs. sales pitches
+
+CRITICAL: If you see "Anzeige" anywhere in German content, this is ALWAYS an advertisement, regardless of the content topic.
+
+IMPORTANT DISTINCTIONS:
+- Posts labeled "Anzeige" (German) or "Sponsored" (English) = ALWAYS "advertisement"  
+- News articles from established media (t3n, BBC, CNN, etc.) = "news" even if they mention products
+- Company posts selling products/services = "advertisement"
+- Individuals sharing personal achievements = "promotion"  
+- Product reviews by regular users = "personal" or relevant category (not "advertisement")
+- Educational tutorials teaching skills = "education"
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -159,59 +186,141 @@ Respond ONLY with valid JSON in this exact format:
     "confidence": 0.85
   }
 }`
-                })
+            };
+
+            // Chrome extension compatible fetch - no explicit timeout needed as Chrome handles it
+            const response = await fetch(`${this.baseUrl}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
-                throw new Error(`Ollama API error: ${response.statusText}`);
+                const errorDetails = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: response.url,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+                
+                let errorBody = '';
+                try {
+                    errorBody = await response.text();
+                } catch (e) {
+                    // Ignore if we can't read the body
+                }
+                
+                const errorMessage = `Ollama API error: ${response.status} ${response.statusText}${errorBody ? ` - ${errorBody}` : ''}`;
+                console.error('Ollama API response error:', errorDetails);
+                
+                throw new Error(errorMessage);
             }
 
             const data: OllamaResponse = await response.json();
-            return this.parseOllamaResponse(data.response);
+            const rating = await this.parseOllamaResponse(data.response);
+            
+            // Add debug info to the rating object
+            (rating as any).debugInfo = {
+                prompt,
+                response: data.response,
+                timestamp: Date.now()
+            };
+            
+            return rating;
         } catch (error) {
             console.error('Error calling Ollama API:', error);
+            await errorLogger.logError('ollama-service', 'ollama-api-call', error as Error, 'high', {
+                postId: post.id,
+                platform: post.platform,
+                modelName,
+                baseUrl: this.baseUrl,
+                promptLength: prompt.length
+            });
             throw error;
         }
     }
 
     private createAnalysisPrompt(post: Post): string {
-        const isSponsored = post.metadata?.isSponsored || post.content.includes('[SPONSORED]');
-        const cleanContent = post.content.replace('[SPONSORED] ', '');
+        const contextInfo = [];
         
-        let contextNotes = [];
-        
-        if (isSponsored) {
-            contextNotes.push('This is a SPONSORED/PROMOTED post');
+        // Add title if available
+        if (post.title) {
+            contextInfo.push(`Title: "${post.title}"`);
         }
         
-        if (post.metadata?.isCompanyAccount) {
-            contextNotes.push('Posted by a COMPANY/BUSINESS account');
+        // Add author profile information
+        if (post.contextualInfo?.authorProfile) {
+            contextInfo.push(`Author Profile: ${post.contextualInfo.authorProfile}`);
         }
         
-        if (post.metadata?.hasPromotionalCTA) {
-            contextNotes.push('Contains promotional call-to-action language');
+        // Add post type context
+        if (post.contextualInfo?.postType) {
+            contextInfo.push(`Post Type: ${post.contextualInfo.postType}`);
         }
         
-        if (post.metadata?.hasExternalLinks) {
-            contextNotes.push('Contains external links');
+        // Add media and link information
+        const mediaInfo = [];
+        if (post.contextualInfo?.hasMedia) mediaInfo.push('contains media');
+        if (post.contextualInfo?.hasLinks) mediaInfo.push('contains external links');
+        if (mediaInfo.length > 0) {
+            contextInfo.push(`Media: ${mediaInfo.join(', ')}`);
         }
         
-        return `Analyze this social media post and rate it on multiple dimensions:
+        // Add engagement metrics if available
+        if (post.contextualInfo?.engagementMetrics) {
+            const metrics = post.contextualInfo.engagementMetrics;
+            const engagementParts = [];
+            if (metrics.likes) engagementParts.push(`${metrics.likes} likes`);
+            if (metrics.comments) engagementParts.push(`${metrics.comments} comments`);
+            if (metrics.shares) engagementParts.push(`${metrics.shares} shares`);
+            if (engagementParts.length > 0) {
+                contextInfo.push(`Engagement: ${engagementParts.join(', ')}`);
+            }
+        }
+        
+        // Add platform-specific hints (but let AI make final decision)
+        if (post.contextualInfo?.platformSpecific) {
+            const hints = [];
+            const platformData = post.contextualInfo.platformSpecific;
+            if (platformData.hasPromotedTag) hints.push('platform shows promoted/sponsored indicators');
+            if (platformData.hasFollowersInfo) hints.push('author has follower count visible');
+            if (platformData.hasExternalArticle) hints.push('links to external article');
+            if (hints.length > 0) {
+                contextInfo.push(`Platform Signals: ${hints.join(', ')}`);
+            }
+        }
+        
+        return `Analyze this social media post and provide comprehensive ratings. You must determine ALL classification aspects from the content itself, including whether it's sponsored, promotional, or commercial.
 
-Content: "${cleanContent}"
+Content: "${post.content}"
 Author: ${post.author}
 Platform: ${post.platform}
-${contextNotes.length > 0 ? '\nContext:\n' + contextNotes.map(note => `- ${note}`).join('\n') : ''}
+${contextInfo.length > 0 ? '\nAdditional Context:\n' + contextInfo.map(info => `- ${info}`).join('\n') : ''}
 
-Consider all the content classification guidelines and signals provided in the system prompt.
-If this appears to be a commercial advertisement or sponsored content, classify it as "advertisement".
-If it's personal self-promotion or networking, classify it as "promotion".
-News organizations sharing articles should be classified as "news" not "advertisement".
+Your task: Analyze this content in ANY language (English, German, French, etc.) and determine:
+1. Content quality metrics
+2. Emotional impact
+3. User preference alignment  
+4. Content category classification
+5. Whether this is sponsored/promotional content (regardless of language)
+
+Look for promotional language, commercial intent, sponsored indicators, and advertisement patterns in any language.
+
+CRITICAL CLASSIFICATION RULES:
+- If content contains "Anzeige" (German) or "Sponsored" (English) labels → MUST classify as "advertisement"
+- If posted by a company account promoting their products/services → "advertisement"  
+- If individual sharing personal achievements → "promotion"
+- If news organization reporting → "news" (even if mentioning products)
+- Commercial product promotions and sponsored content → "advertisement"
+
+PAY SPECIAL ATTENTION to platform signals in the context - if marked as sponsored/promoted, classify accordingly.
 
 Provide ratings in JSON format as specified.`;
     }
 
-    private parseOllamaResponse(response: string): ContentRating {
+    private async parseOllamaResponse(response: string): Promise<ContentRating> {
         try {
             const ratings = JSON.parse(response);
             
@@ -241,6 +350,9 @@ Provide ratings in JSON format as specified.`;
             };
         } catch (error) {
             console.error('Failed to parse Ollama response:', error);
+            await errorLogger.logError('ollama-service', 'parse-response', error as Error, 'medium', {
+                rawResponse: response.length > 1000 ? response.substring(0, 1000) + '...' : response
+            });
             throw new Error('Invalid response format from Ollama');
         }
     }

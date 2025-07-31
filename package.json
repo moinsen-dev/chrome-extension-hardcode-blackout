@@ -1,6 +1,6 @@
 {
   "name": "chrome-extension-hardcode-blackout",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A sophisticated Chrome extension for content filtering with local AI processing",
   "main": "dist/background.js",
   "scripts": {

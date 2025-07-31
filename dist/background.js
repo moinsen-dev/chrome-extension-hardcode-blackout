@@ -375,13 +375,82 @@ class DatabaseService {
     async getStatistics() {
         if (!this.db)
             throw new Error('Database not initialized');
-        const totalItems = this.db.exec("SELECT COUNT(*) as count FROM feed_items")[0]?.values[0][0] || 0;
-        const totalAuthors = this.db.exec("SELECT COUNT(*) as count FROM authors")[0]?.values[0][0] || 0;
-        const lastCapture = this.db.exec("SELECT MAX(captured_at) as latest FROM feed_items")[0]?.values[0][0] || null;
+        // Basic counts
+        const totalPosts = this.db.exec("SELECT COUNT(*) as count FROM feed_items")[0]?.values[0][0] || 0;
+        const uniqueAuthors = this.db.exec("SELECT COUNT(*) as count FROM authors")[0]?.values[0][0] || 0;
+        // Average engagement
+        const avgEngagementResult = this.db.exec(`
+      SELECT AVG(reaction_count + comment_count + repost_count) as avg_engagement 
+      FROM feed_items
+    `)[0];
+        const avgEngagement = avgEngagementResult?.values[0][0] || 0;
+        // Top authors with post count and average engagement
+        const topAuthorsResult = this.db.exec(`
+      SELECT 
+        a.name,
+        COUNT(f.id) as post_count,
+        AVG(f.reaction_count + f.comment_count + f.repost_count) as avg_engagement
+      FROM authors a
+      JOIN feed_items f ON a.id = f.author_id
+      GROUP BY a.id, a.name
+      ORDER BY post_count DESC
+      LIMIT 10
+    `)[0];
+        const topAuthors = [];
+        if (topAuthorsResult) {
+            topAuthorsResult.values.forEach((row) => {
+                topAuthors.push({
+                    name: row[0],
+                    postCount: row[1],
+                    avgEngagement: Math.round(row[2] || 0)
+                });
+            });
+        }
+        // Content type distribution
+        const contentTypesResult = this.db.exec(`
+      SELECT post_type, COUNT(*) as count
+      FROM feed_items
+      WHERE post_type IS NOT NULL
+      GROUP BY post_type
+      ORDER BY count DESC
+    `)[0];
+        const contentTypes = [];
+        if (contentTypesResult) {
+            contentTypesResult.values.forEach((row) => {
+                contentTypes.push({
+                    type: row[0],
+                    count: row[1]
+                });
+            });
+        }
+        // Daily stats (last 7 days)
+        const dailyStatsResult = this.db.exec(`
+      SELECT 
+        DATE(captured_at) as date,
+        COUNT(*) as post_count,
+        AVG(reaction_count + comment_count + repost_count) as avg_score
+      FROM feed_items
+      WHERE captured_at >= datetime('now', '-7 days')
+      GROUP BY DATE(captured_at)
+      ORDER BY date DESC
+    `)[0];
+        const dailyStats = [];
+        if (dailyStatsResult) {
+            dailyStatsResult.values.forEach((row) => {
+                dailyStats.push({
+                    date: row[0],
+                    postCount: row[1],
+                    avgScore: Math.round(row[2] || 0)
+                });
+            });
+        }
         return {
-            totalItems,
-            totalAuthors,
-            lastCapture
+            totalPosts,
+            uniqueAuthors,
+            avgEngagement: Math.round(avgEngagement),
+            topAuthors,
+            contentTypes,
+            dailyStats
         };
     }
     async exportData() {
@@ -430,6 +499,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   OllamaService: () => (/* binding */ OllamaService),
 /* harmony export */   ollamaService: () => (/* binding */ ollamaService)
 /* harmony export */ });
+/* harmony import */ var _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/error-logger */ "./src/utils/error-logger.ts");
+
 class OllamaService {
     static instance;
     baseUrl = 'http://localhost:11434';
@@ -447,14 +518,12 @@ class OllamaService {
     async checkAvailability() {
         try {
             console.log('Checking Ollama availability at:', this.baseUrl);
-            // Try the /api/tags endpoint first (lists models)
+            // Try direct fetch first
             const response = await fetch(`${this.baseUrl}/api/tags`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                mode: 'cors'
+                    'Content-Type': 'application/json'
+                }
             });
             if (response.ok) {
                 const data = await response.json();
@@ -471,7 +540,7 @@ class OllamaService {
             // If CORS fails, try a simple health check
             try {
                 console.log('Initial check failed, trying alternative endpoint...');
-                const healthResponse = await fetch(`${this.baseUrl}/api/version`, {
+                await fetch(`${this.baseUrl}/api/version`, {
                     method: 'GET',
                     mode: 'no-cors' // This won't give us the response body but will tell us if the server exists
                 });
@@ -489,9 +558,16 @@ class OllamaService {
             }
             catch (innerError) {
                 console.log('Ollama is not accessible:', innerError);
+                await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logError('ollama-service', 'check-availability', innerError, 'medium', {
+                    baseUrl: this.baseUrl,
+                    attemptType: 'fallback-health-check'
+                });
             }
         }
         this.isAvailable = false;
+        await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logMessage('ollama-service', 'check-availability', 'Ollama service is unavailable', 'medium', {
+            baseUrl: this.baseUrl
+        });
         return false;
     }
     getAvailableModels() {
@@ -502,31 +578,38 @@ class OllamaService {
     }
     async analyzeContent(post, modelName = 'llama3.2') {
         if (!this.isAvailable) {
-            throw new Error('Ollama service is not available');
+            const error = new Error('Ollama service is not available');
+            await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logError('ollama-service', 'analyze-content', error, 'high', {
+                postId: post.id,
+                platform: post.platform,
+                modelName,
+                ollamaAvailable: this.isAvailable
+            });
+            throw error;
         }
         const prompt = this.createAnalysisPrompt(post);
         try {
-            const response = await fetch(`${this.baseUrl}/api/generate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: modelName,
-                    prompt: prompt,
-                    stream: false,
-                    format: 'json',
-                    system: `You are a content quality analyzer. Analyze social media posts and provide ratings in JSON format.
-                    
+            // Use Chrome extension compatible fetch for localhost
+            const requestBody = {
+                model: modelName,
+                prompt: prompt,
+                stream: false,
+                format: 'json',
+                system: `You are a multilingual content quality analyzer. Analyze social media posts in ANY language (English, German, French, Spanish, etc.) and provide consistent ratings in JSON format.
+
+IMPORTANT: You must analyze content and detect patterns regardless of language. Apply the same quality standards and classification logic to German, English, French, or any other language.
+
 Rate each aspect on a scale of 1-10:
 - Content Quality (writingQuality, informationDensity, sourceCredibility, originality)
 - Emotional Impact (toxicityLevel, emotionalManipulation, socialHarmony)
 - User Preferences (topicAlignment, sourcePreference, historicalInteraction)
 
-CONTENT CLASSIFICATION GUIDE:
+CONTENT CLASSIFICATION GUIDE (apply to any language):
 - personal: Personal stories, life updates, emotional experiences, opinions, casual conversations
-- business: Business strategies, company updates, professional insights, entrepreneurship, management tips
+- business: Business strategies, company updates, professional insights, entrepreneurship, management tips  
 - tech: Technology news, software development, IT topics, gadgets, AI/ML, cybersecurity
 - finance: Financial markets, investments, economic news, banking, cryptocurrency, trading
-- news: Current events, journalism, breaking news, media reports (NOT company PR)
+- news: Current events, journalism, breaking news, media reports from news organizations (NOT company PR)
 - entertainment: Movies, music, games, sports, celebrity news, humor, memes
 - education: Tutorials, courses, learning resources, how-to guides, academic content, skill development
 - advertisement: Product promotions, sponsored content, commercial offers, sales pitches, marketing campaigns
@@ -534,13 +617,27 @@ CONTENT CLASSIFICATION GUIDE:
 - politics: Political news, government policies, elections, political opinions, activism
 - other: Content that doesn't clearly fit other categories
 
-CLASSIFICATION SIGNALS:
-- Look for [SPONSORED] tag for advertisements
-- Check for promotional language: "Buy now", "Limited offer", "Sign up", "Get yours"
-- Company posts about products/services = advertisement
-- Individual sharing achievements = promotion
-- Teaching/explaining concepts = education
-- Product reviews by users = personal or tech/business (not advertisement)
+MULTILINGUAL CLASSIFICATION SIGNALS:
+Detect these patterns in ANY language:
+- Sponsored/promoted content indicators:
+  * English: "Sponsored", "Promoted", "Ad"
+  * German: "Anzeige", "Gesponsert", "Beworben", "Werbung"  
+  * French: "Sponsorisé", "Publicité", "Annonce"
+- Commercial language (English: "Buy now", German: "Jetzt kaufen", French: "Acheter maintenant")
+- Call-to-action phrases (English: "Sign up", German: "Hier anmelden", French: "S'inscrire")
+- Company promotional content vs. news reporting
+- Personal achievements vs. commercial advertisements
+- Educational content vs. sales pitches
+
+CRITICAL: If you see "Anzeige" anywhere in German content, this is ALWAYS an advertisement, regardless of the content topic.
+
+IMPORTANT DISTINCTIONS:
+- Posts labeled "Anzeige" (German) or "Sponsored" (English) = ALWAYS "advertisement"  
+- News articles from established media (t3n, BBC, CNN, etc.) = "news" even if they mention products
+- Company posts selling products/services = "advertisement"
+- Individuals sharing personal achievements = "promotion"  
+- Product reviews by regular users = "personal" or relevant category (not "advertisement")
+- Educational tutorials teaching skills = "education"
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -565,50 +662,134 @@ Respond ONLY with valid JSON in this exact format:
     "confidence": 0.85
   }
 }`
-                })
+            };
+            // Chrome extension compatible fetch - no explicit timeout needed as Chrome handles it
+            const response = await fetch(`${this.baseUrl}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             });
             if (!response.ok) {
-                throw new Error(`Ollama API error: ${response.statusText}`);
+                const errorDetails = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: response.url,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+                let errorBody = '';
+                try {
+                    errorBody = await response.text();
+                }
+                catch (e) {
+                    // Ignore if we can't read the body
+                }
+                const errorMessage = `Ollama API error: ${response.status} ${response.statusText}${errorBody ? ` - ${errorBody}` : ''}`;
+                console.error('Ollama API response error:', errorDetails);
+                throw new Error(errorMessage);
             }
             const data = await response.json();
-            return this.parseOllamaResponse(data.response);
+            const rating = await this.parseOllamaResponse(data.response);
+            // Add debug info to the rating object
+            rating.debugInfo = {
+                prompt,
+                response: data.response,
+                timestamp: Date.now()
+            };
+            return rating;
         }
         catch (error) {
             console.error('Error calling Ollama API:', error);
+            await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logError('ollama-service', 'ollama-api-call', error, 'high', {
+                postId: post.id,
+                platform: post.platform,
+                modelName,
+                baseUrl: this.baseUrl,
+                promptLength: prompt.length
+            });
             throw error;
         }
     }
     createAnalysisPrompt(post) {
-        const isSponsored = post.metadata?.isSponsored || post.content.includes('[SPONSORED]');
-        const cleanContent = post.content.replace('[SPONSORED] ', '');
-        let contextNotes = [];
-        if (isSponsored) {
-            contextNotes.push('This is a SPONSORED/PROMOTED post');
+        const contextInfo = [];
+        // Add title if available
+        if (post.title) {
+            contextInfo.push(`Title: "${post.title}"`);
         }
-        if (post.metadata?.isCompanyAccount) {
-            contextNotes.push('Posted by a COMPANY/BUSINESS account');
+        // Add author profile information
+        if (post.contextualInfo?.authorProfile) {
+            contextInfo.push(`Author Profile: ${post.contextualInfo.authorProfile}`);
         }
-        if (post.metadata?.hasPromotionalCTA) {
-            contextNotes.push('Contains promotional call-to-action language');
+        // Add post type context
+        if (post.contextualInfo?.postType) {
+            contextInfo.push(`Post Type: ${post.contextualInfo.postType}`);
         }
-        if (post.metadata?.hasExternalLinks) {
-            contextNotes.push('Contains external links');
+        // Add media and link information
+        const mediaInfo = [];
+        if (post.contextualInfo?.hasMedia)
+            mediaInfo.push('contains media');
+        if (post.contextualInfo?.hasLinks)
+            mediaInfo.push('contains external links');
+        if (mediaInfo.length > 0) {
+            contextInfo.push(`Media: ${mediaInfo.join(', ')}`);
         }
-        return `Analyze this social media post and rate it on multiple dimensions:
+        // Add engagement metrics if available
+        if (post.contextualInfo?.engagementMetrics) {
+            const metrics = post.contextualInfo.engagementMetrics;
+            const engagementParts = [];
+            if (metrics.likes)
+                engagementParts.push(`${metrics.likes} likes`);
+            if (metrics.comments)
+                engagementParts.push(`${metrics.comments} comments`);
+            if (metrics.shares)
+                engagementParts.push(`${metrics.shares} shares`);
+            if (engagementParts.length > 0) {
+                contextInfo.push(`Engagement: ${engagementParts.join(', ')}`);
+            }
+        }
+        // Add platform-specific hints (but let AI make final decision)
+        if (post.contextualInfo?.platformSpecific) {
+            const hints = [];
+            const platformData = post.contextualInfo.platformSpecific;
+            if (platformData.hasPromotedTag)
+                hints.push('platform shows promoted/sponsored indicators');
+            if (platformData.hasFollowersInfo)
+                hints.push('author has follower count visible');
+            if (platformData.hasExternalArticle)
+                hints.push('links to external article');
+            if (hints.length > 0) {
+                contextInfo.push(`Platform Signals: ${hints.join(', ')}`);
+            }
+        }
+        return `Analyze this social media post and provide comprehensive ratings. You must determine ALL classification aspects from the content itself, including whether it's sponsored, promotional, or commercial.
 
-Content: "${cleanContent}"
+Content: "${post.content}"
 Author: ${post.author}
 Platform: ${post.platform}
-${contextNotes.length > 0 ? '\nContext:\n' + contextNotes.map(note => `- ${note}`).join('\n') : ''}
+${contextInfo.length > 0 ? '\nAdditional Context:\n' + contextInfo.map(info => `- ${info}`).join('\n') : ''}
 
-Consider all the content classification guidelines and signals provided in the system prompt.
-If this appears to be a commercial advertisement or sponsored content, classify it as "advertisement".
-If it's personal self-promotion or networking, classify it as "promotion".
-News organizations sharing articles should be classified as "news" not "advertisement".
+Your task: Analyze this content in ANY language (English, German, French, etc.) and determine:
+1. Content quality metrics
+2. Emotional impact
+3. User preference alignment  
+4. Content category classification
+5. Whether this is sponsored/promotional content (regardless of language)
+
+Look for promotional language, commercial intent, sponsored indicators, and advertisement patterns in any language.
+
+CRITICAL CLASSIFICATION RULES:
+- If content contains "Anzeige" (German) or "Sponsored" (English) labels → MUST classify as "advertisement"
+- If posted by a company account promoting their products/services → "advertisement"  
+- If individual sharing personal achievements → "promotion"
+- If news organization reporting → "news" (even if mentioning products)
+- Commercial product promotions and sponsored content → "advertisement"
+
+PAY SPECIAL ATTENTION to platform signals in the context - if marked as sponsored/promoted, classify accordingly.
 
 Provide ratings in JSON format as specified.`;
     }
-    parseOllamaResponse(response) {
+    async parseOllamaResponse(response) {
         try {
             const ratings = JSON.parse(response);
             // Calculate weighted overall score
@@ -633,6 +814,9 @@ Provide ratings in JSON format as specified.`;
         }
         catch (error) {
             console.error('Failed to parse Ollama response:', error);
+            await _utils_error_logger__WEBPACK_IMPORTED_MODULE_0__.errorLogger.logError('ollama-service', 'parse-response', error, 'medium', {
+                rawResponse: response.length > 1000 ? response.substring(0, 1000) + '...' : response
+            });
             throw new Error('Invalid response format from Ollama');
         }
     }
@@ -641,6 +825,208 @@ Provide ratings in JSON format as specified.`;
     }
 }
 const ollamaService = OllamaService.getInstance();
+
+
+/***/ }),
+
+/***/ "./src/utils/error-logger.ts":
+/*!***********************************!*\
+  !*** ./src/utils/error-logger.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ErrorLogger: () => (/* binding */ ErrorLogger),
+/* harmony export */   errorLogger: () => (/* binding */ errorLogger)
+/* harmony export */ });
+class ErrorLogger {
+    static instance;
+    maxErrors = 100; // Maximum number of errors to store
+    storageKey = 'extensionErrors';
+    constructor() { }
+    static getInstance() {
+        if (!ErrorLogger.instance) {
+            ErrorLogger.instance = new ErrorLogger();
+        }
+        return ErrorLogger.instance;
+    }
+    /**
+     * Log an error with context information
+     */
+    async logError(component, operation, error, severity = 'medium', context) {
+        try {
+            const extensionError = {
+                id: this.generateId(),
+                timestamp: Date.now(),
+                component,
+                operation,
+                severity,
+                error: {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                },
+                context: {
+                    ...context,
+                    url: typeof window !== 'undefined' ? window.location.href : undefined,
+                    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+                    extensionVersion: chrome.runtime.getManifest().version
+                }
+            };
+            await this.storeError(extensionError);
+            // Also log to console for immediate debugging
+            console.error(`[${component}] ${operation}:`, error, context);
+        }
+        catch (storageError) {
+            // Fallback: at least log to console if storage fails
+            console.error('Failed to store error log:', storageError);
+            console.error(`[${component}] ${operation}:`, error, context);
+        }
+    }
+    /**
+     * Log a simple message as an error
+     */
+    async logMessage(component, operation, message, severity = 'medium', context) {
+        const error = new Error(message);
+        await this.logError(component, operation, error, severity, context);
+    }
+    /**
+     * Get all stored errors
+     */
+    async getErrors() {
+        try {
+            const result = await chrome.storage.local.get(this.storageKey);
+            return result[this.storageKey] || [];
+        }
+        catch (error) {
+            console.error('Failed to retrieve error logs:', error);
+            return [];
+        }
+    }
+    /**
+     * Get errors filtered by component
+     */
+    async getErrorsByComponent(component) {
+        const errors = await this.getErrors();
+        return errors.filter(err => err.component === component);
+    }
+    /**
+     * Get errors filtered by severity
+     */
+    async getErrorsBySeverity(severity) {
+        const errors = await this.getErrors();
+        return errors.filter(err => err.severity === severity);
+    }
+    /**
+     * Clear all stored errors
+     */
+    async clearErrors() {
+        try {
+            await chrome.storage.local.remove(this.storageKey);
+        }
+        catch (error) {
+            console.error('Failed to clear error logs:', error);
+        }
+    }
+    /**
+     * Clear errors older than specified days
+     */
+    async clearOldErrors(daysOld = 7) {
+        try {
+            const errors = await this.getErrors();
+            const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
+            const recentErrors = errors.filter(err => err.timestamp > cutoffTime);
+            await chrome.storage.local.set({ [this.storageKey]: recentErrors });
+        }
+        catch (error) {
+            console.error('Failed to clear old error logs:', error);
+        }
+    }
+    /**
+     * Get error statistics
+     */
+    async getErrorStats() {
+        const errors = await this.getErrors();
+        const last24Hours = Date.now() - (24 * 60 * 60 * 1000);
+        const stats = {
+            total: errors.length,
+            byComponent: {},
+            bySeverity: {},
+            last24Hours: errors.filter(err => err.timestamp > last24Hours).length
+        };
+        errors.forEach(err => {
+            stats.byComponent[err.component] = (stats.byComponent[err.component] || 0) + 1;
+            stats.bySeverity[err.severity] = (stats.bySeverity[err.severity] || 0) + 1;
+        });
+        return stats;
+    }
+    /**
+     * Store error in Chrome storage
+     */
+    async storeError(error) {
+        const errors = await this.getErrors();
+        errors.unshift(error); // Add to beginning of array (most recent first)
+        // Keep only the most recent errors
+        if (errors.length > this.maxErrors) {
+            errors.splice(this.maxErrors);
+        }
+        await chrome.storage.local.set({ [this.storageKey]: errors });
+    }
+    /**
+     * Generate a unique ID for the error
+     */
+    generateId() {
+        return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    /**
+     * Wrap a function to automatically log errors
+     */
+    wrapAsync(component, operation, fn) {
+        return async (...args) => {
+            try {
+                return await fn(...args);
+            }
+            catch (error) {
+                await this.logError(component, operation, error, 'high', { args });
+                throw error; // Re-throw to maintain original behavior
+            }
+        };
+    }
+    /**
+     * Wrap a synchronous function to automatically log errors
+     */
+    wrapSync(component, operation, fn) {
+        return (...args) => {
+            try {
+                return fn(...args);
+            }
+            catch (error) {
+                // Use setTimeout to avoid blocking synchronous execution
+                setTimeout(() => {
+                    this.logError(component, operation, error, 'high', { args });
+                }, 0);
+                throw error; // Re-throw to maintain original behavior
+            }
+        };
+    }
+}
+// Export a singleton instance
+const errorLogger = ErrorLogger.getInstance();
+// Global error handler for unhandled errors
+if (typeof window !== 'undefined') {
+    window.addEventListener('error', (event) => {
+        errorLogger.logError('global', 'unhandled-error', event.error || new Error(event.message), 'critical', {
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno
+        });
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        errorLogger.logError('global', 'unhandled-promise-rejection', event.reason instanceof Error ? event.reason : new Error(String(event.reason)), 'critical');
+    });
+}
 
 
 /***/ }),
@@ -807,7 +1193,8 @@ async function initializeStorage() {
                 contentQuality: 0.4,
                 emotionalImpact: 0.3,
                 userPreferences: 0.3
-            }
+            },
+            defaultViewMode: 'condensed' // Default to condensed view
         },
         modelSettings: {
             modelPath: 'models/default.gguf',
@@ -951,10 +1338,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         if (!message.post) {
             console.error('No post data provided');
+            sendResponse({ rating: createFallbackRating().overallScore, fallback: true, error: 'No post data' });
             return true;
         }
         const post = message.post;
-        // Handle the rating request asynchronously
+        // Handle the rating request asynchronously with proper error boundaries
         (async () => {
             try {
                 // Get storage data
@@ -970,7 +1358,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 // In development mode or if initialized, proceed with analysis
                 if (!settings?.isInitialized && !isDevelopmentMode()) {
                     console.log('Extension not initialized and not in development mode');
-                    sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+                    sendResponse({ rating: createFallbackRating().overallScore, fallback: true, reason: 'not_initialized' });
                     return;
                 }
                 // Check cache first with expiration check
@@ -983,6 +1371,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         sendResponse({
                             rating: cachedRating.overallScore,
                             contentType: cachedRating.contentType,
+                            debugInfo: cachedRating.debugInfo,
                             cached: true
                         });
                         return;
@@ -1000,7 +1389,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     if (_ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.isOllamaAvailable()) {
                         console.log('Using Ollama for content analysis');
                         const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
-                        rating = await _ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.analyzeContent(post, modelName);
+                        // Add timeout to prevent hanging requests
+                        const analysisPromise = _ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.analyzeContent(post, modelName);
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('Ollama request timeout')), 30000); // 30 second timeout
+                        });
+                        rating = await Promise.race([analysisPromise, timeoutPromise]);
                     }
                     else {
                         throw new Error('Ollama is not available. Please ensure Ollama is running.');
@@ -1025,29 +1419,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     await chrome.storage.local.set({ cachedRatings });
                     sendResponse({
                         rating: rating.overallScore,
-                        contentType: rating.contentType
+                        contentType: rating.contentType,
+                        debugInfo: rating.debugInfo
                     });
                 }
                 catch (error) {
                     console.error('Error analyzing content:', error);
                     // Use fallback rating and still cache it
                     const fallbackRating = createFallbackRating();
-                    console.log('Using fallback rating due to error');
+                    console.log('Using fallback rating due to error:', error instanceof Error ? error.message : String(error));
                     // Cache the fallback rating too so stats are updated
                     cachedRatings[post.id] = fallbackRating;
-                    await chrome.storage.local.set({ cachedRatings });
+                    try {
+                        await chrome.storage.local.set({ cachedRatings });
+                    }
+                    catch (storageError) {
+                        console.error('Failed to save fallback rating to cache:', storageError);
+                    }
                     sendResponse({
                         rating: fallbackRating.overallScore,
                         contentType: fallbackRating.contentType,
-                        fallback: true
+                        fallback: true,
+                        error: error instanceof Error ? error.message : String(error)
                     });
                 }
             }
-            catch (error) {
-                console.error('Error in REQUEST_RATING handler:', error);
-                sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+            catch (outerError) {
+                console.error('Critical error in REQUEST_RATING handler:', outerError);
+                // Ensure we always send a response
+                sendResponse({
+                    rating: createFallbackRating().overallScore,
+                    fallback: true,
+                    error: outerError instanceof Error ? outerError.message : String(outerError)
+                });
             }
-        })();
+        })().catch((asyncError) => {
+            // Final safety net for any unhandled promise rejections
+            console.error('Unhandled async error in REQUEST_RATING:', asyncError);
+            sendResponse({
+                rating: createFallbackRating().overallScore,
+                fallback: true,
+                error: 'Unhandled async error'
+            });
+        });
         return true;
     }
     // Handle setup completion
@@ -1113,6 +1527,57 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
         })();
         return true;
+    }
+    if (message.type === 'USER_FEEDBACK') {
+        console.log('USER_FEEDBACK received:', {
+            postId: message.postId,
+            feedback: message.feedback
+        });
+        (async () => {
+            try {
+                // Store user feedback in chrome.storage for learning
+                const result = await chrome.storage.local.get('userFeedback');
+                const feedback = result.userFeedback || {};
+                if (message.postId) {
+                    if (message.feedback === null) {
+                        // Remove feedback if null
+                        delete feedback[message.postId];
+                    }
+                    else {
+                        // Store feedback with timestamp
+                        feedback[message.postId] = {
+                            feedback: message.feedback,
+                            timestamp: message.timestamp || Date.now()
+                        };
+                    }
+                }
+                await chrome.storage.local.set({ userFeedback: feedback });
+                console.log(`User feedback stored for post ${message.postId}: ${message.feedback}`);
+                sendResponse({ success: true });
+            }
+            catch (error) {
+                console.error('Error storing user feedback:', error);
+                sendResponse({
+                    success: false,
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        })();
+        return true;
+    }
+    // Handle BLOCK_CONTENT message
+    if (message.type === 'BLOCK_CONTENT') {
+        console.log('Content blocked by user:', message.post?.id);
+        // Could store blocked content for analytics
+        sendResponse({ success: true });
+        return false; // Synchronous response
+    }
+    // Handle UPDATE_ICON_STATE message
+    if (message.type === 'UPDATE_ICON_STATE') {
+        // Could update extension icon based on active state
+        console.log('Icon state update:', message.active ? 'active' : 'inactive');
+        sendResponse({ success: true });
+        return false; // Synchronous response
     }
     return true;
 });

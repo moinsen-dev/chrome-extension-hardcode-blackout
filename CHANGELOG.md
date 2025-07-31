@@ -5,6 +5,26 @@ All notable changes to the Hardcore Blackout Chrome extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-07-31
+
+### Fixed
+- **Message Channel Timeout Errors**: Fixed Chrome extension message passing errors that occurred when background script didn't respond
+  - Added proper error handling for all `chrome.runtime.sendMessage` calls
+  - Added message handlers for BLOCK_CONTENT and UPDATE_ICON_STATE messages
+  - Wrapped async message sends in try-catch blocks
+- **Extension Enable/Disable**: Extension now properly stops when toggled off
+  - Added extensionEnabled state check in content script initialization
+  - Popup toggle now properly enables/disables the extension
+  - Tabs reload when extension is toggled to apply state changes
+- **Ollama API 403 Errors**: Resolved with CORS configuration
+  - Documented Ollama CORS setup requirements
+  - Simplified fetch headers for Chrome extension compatibility
+  - Added comprehensive error handling for API failures
+
+### Changed
+- Improved error handling throughout the extension
+- Enhanced message passing reliability between content and background scripts
+
 ## [0.5.0] - 2025-01-30
 
 ### 🎉 Feed Analytics Integration - LinkedIn Professional Intelligence

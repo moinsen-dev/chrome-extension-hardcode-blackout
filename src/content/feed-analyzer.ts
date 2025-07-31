@@ -135,16 +135,21 @@ export class FeedAnalyzer {
         return;
       }
 
-      // Send to background script for storage
-      const response = await chrome.runtime.sendMessage({
-        type: 'FEED_ITEM_DETECTED',
-        data: feedData
-      });
+      // Send to background script for storage with proper error handling
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'FEED_ITEM_DETECTED',
+          data: feedData
+        });
 
-      if (response.success) {
-        console.log(`Feed item processed: ${response.result.status} - ${feedData.id}`);
-      } else {
-        console.error('Failed to store feed item:', response.error);
+        if (response && response.success) {
+          console.log(`Feed item processed: ${response.result?.status} - ${feedData.id}`);
+        } else if (response) {
+          console.error('Failed to store feed item:', response.error);
+        }
+      } catch (msgError) {
+        // Handle case where background script doesn't respond
+        console.warn('Background script did not respond to FEED_ITEM_DETECTED:', msgError);
       }
     } catch (error) {
       console.error('Error processing feed item:', error);

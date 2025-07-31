@@ -50906,7 +50906,7 @@ function combine (array, callback) {
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"name":"chrome-extension-hardcode-blackout","version":"0.5.0","description":"A sophisticated Chrome extension for content filtering with local AI processing","main":"dist/background.js","scripts":{"build":"webpack --config webpack.config.js","watch":"webpack --config webpack.config.js --watch","dev":"webpack --config webpack.config.js --mode development --watch","prod":"webpack --config webpack.config.js --mode production","type-check":"tsc --noEmit","lint":"eslint . --ext .ts,.tsx","lint:fix":"eslint . --ext .ts,.tsx --fix","test":"jest","test:watch":"jest --watch","test:coverage":"jest --coverage","test:e2e":"playwright test","test:unit":"jest --testPathPattern=src/__tests__/unit","test:integration":"jest --testPathPattern=src/__tests__/integration"},"keywords":["chrome-extension","content-filtering","ai","privacy","social-media"],"author":"","license":"MIT","dependencies":{"@emotion/react":"^11.0.0","@emotion/styled":"^11.0.0","@mui/icons-material":"^5.18.0","@mui/material":"^5.0.0","react":"^18.0.0","react-dom":"^18.0.0","sql.js":"^1.13.0"},"devDependencies":{"@jest/globals":"^29.0.0","@playwright/test":"^1.41.0","@testing-library/jest-dom":"^6.0.0","@testing-library/react":"^14.0.0","@testing-library/user-event":"^14.0.0","@types/chrome":"^0.0.260","@types/jest":"^29.5.14","@types/node":"^20.0.0","@types/react":"^18.0.0","@types/react-dom":"^18.0.0","@types/sql.js":"^1.4.9","@typescript-eslint/eslint-plugin":"^6.0.0","@typescript-eslint/parser":"^6.0.0","autoprefixer":"^10.0.0","canvas":"^3.1.0","copy-webpack-plugin":"^12.0.2","eslint":"^8.0.0","eslint-plugin-react":"^7.0.0","eslint-plugin-react-hooks":"^4.0.0","identity-obj-proxy":"^3.0.0","jest":"^29.0.0","jest-chrome":"^0.8.0","jest-environment-jsdom":"^29.0.0","msw":"^2.0.0","postcss":"^8.0.0","tailwindcss":"^3.0.0","ts-jest":"^29.0.0","ts-loader":"^9.0.0","typescript":"^5.0.0","webpack":"^5.0.0","webpack-cli":"^5.0.0"},"jest":{"preset":"ts-jest","testEnvironment":"jsdom","setupFilesAfterEnv":["<rootDir>/src/__tests__/setup.ts"],"moduleNameMapper":{"\\\\.(css|less|scss|sass)$":"identity-obj-proxy"},"transform":{"^.+\\\\.tsx?$":["ts-jest",{"tsconfig":"tsconfig.jest.json","useESM":true}]},"testMatch":["<rootDir>/src/__tests__/**/*.test.ts","<rootDir>/src/__tests__/**/*.test.tsx"],"moduleFileExtensions":["ts","tsx","js","jsx","json","node"]}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"chrome-extension-hardcode-blackout","version":"0.5.1","description":"A sophisticated Chrome extension for content filtering with local AI processing","main":"dist/background.js","scripts":{"build":"webpack --config webpack.config.js","watch":"webpack --config webpack.config.js --watch","dev":"webpack --config webpack.config.js --mode development --watch","prod":"webpack --config webpack.config.js --mode production","type-check":"tsc --noEmit","lint":"eslint . --ext .ts,.tsx","lint:fix":"eslint . --ext .ts,.tsx --fix","test":"jest","test:watch":"jest --watch","test:coverage":"jest --coverage","test:e2e":"playwright test","test:unit":"jest --testPathPattern=src/__tests__/unit","test:integration":"jest --testPathPattern=src/__tests__/integration"},"keywords":["chrome-extension","content-filtering","ai","privacy","social-media"],"author":"","license":"MIT","dependencies":{"@emotion/react":"^11.0.0","@emotion/styled":"^11.0.0","@mui/icons-material":"^5.18.0","@mui/material":"^5.0.0","react":"^18.0.0","react-dom":"^18.0.0","sql.js":"^1.13.0"},"devDependencies":{"@jest/globals":"^29.0.0","@playwright/test":"^1.41.0","@testing-library/jest-dom":"^6.0.0","@testing-library/react":"^14.0.0","@testing-library/user-event":"^14.0.0","@types/chrome":"^0.0.260","@types/jest":"^29.5.14","@types/node":"^20.0.0","@types/react":"^18.0.0","@types/react-dom":"^18.0.0","@types/sql.js":"^1.4.9","@typescript-eslint/eslint-plugin":"^6.0.0","@typescript-eslint/parser":"^6.0.0","autoprefixer":"^10.0.0","canvas":"^3.1.0","copy-webpack-plugin":"^12.0.2","eslint":"^8.0.0","eslint-plugin-react":"^7.0.0","eslint-plugin-react-hooks":"^4.0.0","identity-obj-proxy":"^3.0.0","jest":"^29.0.0","jest-chrome":"^0.8.0","jest-environment-jsdom":"^29.0.0","msw":"^2.0.0","postcss":"^8.0.0","tailwindcss":"^3.0.0","ts-jest":"^29.0.0","ts-loader":"^9.0.0","typescript":"^5.0.0","webpack":"^5.0.0","webpack-cli":"^5.0.0"},"jest":{"preset":"ts-jest","testEnvironment":"jsdom","setupFilesAfterEnv":["<rootDir>/src/__tests__/setup.ts"],"moduleNameMapper":{"\\\\.(css|less|scss|sass)$":"identity-obj-proxy"},"transform":{"^.+\\\\.tsx?$":["ts-jest",{"tsconfig":"tsconfig.jest.json","useESM":true}]},"testMatch":["<rootDir>/src/__tests__/**/*.test.ts","<rootDir>/src/__tests__/**/*.test.tsx"],"moduleFileExtensions":["ts","tsx","js","jsx","json","node"]}}');
 
 /***/ })
 
@@ -51043,10 +51043,12 @@ const Popup = () => {
     // Add listener for storage changes
     (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
         const handleStorageChange = (changes) => {
+            if (changes.extensionEnabled) {
+                setEnabled(changes.extensionEnabled.newValue);
+            }
             if (changes.settings) {
                 const newSettings = changes.settings.newValue;
                 setFilterStrength(newSettings.settings?.autoHideThreshold || 20);
-                setEnabled(newSettings.isInitialized || false);
             }
             if (changes.cachedRatings) {
                 updateStats(changes.cachedRatings.newValue);
@@ -51085,10 +51087,11 @@ const Popup = () => {
     };
     (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
         // Load initial settings and stats
-        chrome.storage.local.get(['settings', 'cachedRatings'], (result) => {
+        chrome.storage.local.get(['extensionEnabled', 'settings', 'cachedRatings'], (result) => {
+            // Default to enabled if not set
+            setEnabled(result.extensionEnabled !== false);
             if (result.settings) {
                 setFilterStrength(result.settings.settings?.autoHideThreshold || 20);
-                setEnabled(result.settings.isInitialized || false);
                 // Check if analytics are enabled
                 const analyticsEnabled = result.settings?.analytics?.enableFeedAnalytics ?? true;
                 if (analyticsEnabled) {
@@ -51103,15 +51106,20 @@ const Popup = () => {
     const handleToggle = () => {
         const newEnabled = !enabled;
         setEnabled(newEnabled);
-        chrome.storage.local.get('settings', (result) => {
-            const updatedSettings = {
-                ...result.settings,
-                isInitialized: newEnabled
-            };
-            chrome.storage.local.set({ settings: updatedSettings });
-            chrome.runtime.sendMessage({
-                type: 'UPDATE_ENABLED_STATE',
-                enabled: newEnabled
+        // Store the enabled state separately
+        chrome.storage.local.set({ extensionEnabled: newEnabled }, () => {
+            console.log('Extension enabled state updated:', newEnabled);
+            // Notify all tabs to enable/disable
+            chrome.tabs.query({}, (tabs) => {
+                tabs.forEach(tab => {
+                    if (tab.id && tab.url &&
+                        (tab.url.includes('twitter.com') ||
+                            tab.url.includes('facebook.com') ||
+                            tab.url.includes('reddit.com') ||
+                            tab.url.includes('linkedin.com'))) {
+                        chrome.tabs.reload(tab.id);
+                    }
+                });
             });
         });
     };
