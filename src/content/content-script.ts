@@ -1,4 +1,5 @@
 import { Post } from '../utils/types';
+import { feedAnalyzer } from './feed-analyzer';
 
 // Add snackbar styles
 const snackbarStyles = `
@@ -21,6 +22,268 @@ const snackbarStyles = `
   min-width: 100px;
   backdrop-filter: blur(8px);
   color: white;
+  transition: all 0.3s ease;
+}
+
+/* Rating Score Styles */
+.blackout-score {
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Score color ranges */
+.blackout-score.score-0,
+.blackout-score.score-20 {
+  background: linear-gradient(135deg, #d32f2f, #f44336);
+  color: white;
+  border: 2px solid #b71c1c;
+}
+
+.blackout-score.score-40 {
+  background: linear-gradient(135deg, #f57c00, #ff9800);
+  color: white;
+  border: 2px solid #e65100;
+}
+
+.blackout-score.score-60 {
+  background: linear-gradient(135deg, #fbc02d, #ffd54f);
+  color: #333;
+  border: 2px solid #f57f17;
+}
+
+.blackout-score.score-80,
+.blackout-score.score-100 {
+  background: linear-gradient(135deg, #388e3c, #4caf50);
+  color: white;
+  border: 2px solid #1b5e20;
+}
+
+/* Fallback rating style */
+.blackout-score.fallback {
+  opacity: 0.7;
+  border-style: dashed !important;
+  position: relative;
+}
+
+.blackout-score.fallback::after {
+  content: "Est.";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 10px;
+  background: rgba(33, 33, 33, 0.9);
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #999;
+  font-weight: normal;
+}
+
+/* Loading state */
+.blackout-score.loading {
+  background: linear-gradient(90deg, #424242, #616161, #424242);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  color: #999;
+  border: 2px solid #333;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.blackout-score.loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid #666;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Action buttons styling */
+.blackout-actions {
+  display: flex;
+  gap: 6px;
+  position: relative;
+}
+
+.blackout-actions button {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.blackout-actions button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.blackout-actions button:active::before {
+  width: 100px;
+  height: 100px;
+}
+
+.blackout-hide {
+  background: linear-gradient(135deg, #616161, #757575);
+  color: white;
+}
+
+.blackout-hide:hover {
+  background: linear-gradient(135deg, #757575, #9e9e9e);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.blackout-block {
+  background: linear-gradient(135deg, #d32f2f, #f44336);
+  color: white;
+}
+
+.blackout-block:hover {
+  background: linear-gradient(135deg, #f44336, #ef5350);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Post filter effects */
+.blackout-filtered {
+  transition: all 0.5s ease;
+}
+
+.blackout-filtered.opacity-25 {
+  opacity: 0.25 !important;
+}
+
+.blackout-filtered.opacity-50 {
+  opacity: 0.5 !important;
+}
+
+.blackout-filtered.opacity-75 {
+  opacity: 0.75 !important;
+}
+
+.blackout-filtered.blur-light {
+  filter: blur(2px);
+}
+
+.blackout-filtered.blur-medium {
+  filter: blur(4px);
+}
+
+.blackout-filtered.blur-heavy {
+  filter: blur(8px);
+}
+
+.blackout-filtered.grayscale {
+  filter: grayscale(100%);
+}
+
+/* Combined effects */
+.blackout-filtered.blur-light.opacity-75 {
+  filter: blur(2px);
+  opacity: 0.75 !important;
+}
+
+.blackout-filtered.blur-medium.opacity-50 {
+  filter: blur(4px);
+  opacity: 0.5 !important;
+}
+
+.blackout-filtered.blur-heavy.opacity-25 {
+  filter: blur(8px);
+  opacity: 0.25 !important;
+}
+
+/* Rating appear animation */
+@keyframes ratingAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.blackout-rating {
+  animation: ratingAppear 0.3s ease-out;
+}
+
+/* Hover effects for the rating overlay */
+.blackout-rating:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Make action buttons more visible on hover */
+.blackout-rating:hover .blackout-actions {
+  opacity: 1;
+}
+
+.blackout-actions {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+/* Content classification */
+.blackout-classification {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.blackout-classification-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.blackout-classification-label {
+  text-transform: capitalize;
+  font-weight: 500;
 }
 
 .blackout-snackbar {
@@ -59,10 +322,69 @@ const snackbarStyles = `
   white-space: nowrap;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .blackout-actions button:hover + .blackout-tooltip {
   opacity: 1;
+}
+
+/* Status indicator styles */
+.blackout-status-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(33, 33, 33, 0.95);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.blackout-status-indicator:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.blackout-status-icon {
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.blackout-status-text {
+  font-weight: 500;
+}
+
+.blackout-stats {
+  font-size: 11px;
+  color: #999;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  padding-left: 12px;
+}
+
+.blackout-processed {
+  color: #4caf50;
+  font-weight: bold;
 }
 
 .blackout-snackbar.supported {
@@ -151,6 +473,23 @@ const snackbarStyles = `
 }
 `;
 
+// Content type icon mapping
+function getContentTypeIcon(category: string): string {
+  const iconMap: { [key: string]: string } = {
+    'personal': '💬',      // Personal/Social talk
+    'business': '💼',      // Business content
+    'tech': '💻',          // Technology
+    'finance': '💰',       // Finance/Money
+    'news': '📰',          // News/Current events
+    'entertainment': '🎬', // Entertainment
+    'education': '📚',     // Educational content
+    'promotion': '📢',     // Ads/Promotions
+    'politics': '🏛️',      // Political content
+    'other': '📄'          // Other/Unknown
+  };
+  return iconMap[category] || '📄';
+}
+
 export class PostDetector {
   private platform: 'twitter' | 'facebook' | 'reddit' | 'linkedin' | null;
   private observer: MutationObserver;
@@ -158,8 +497,10 @@ export class PostDetector {
   private snackbar: HTMLElement | null = null;
 
   constructor() {
+    console.log('PostDetector: Initializing on', window.location.hostname);
     this.injectStyles();
     this.platform = this.detectPlatform();
+    console.log('PostDetector: Detected platform:', this.platform);
     this.observer = new MutationObserver(this.handleMutations.bind(this));
     this.createStatusIndicator();
     this.showPlatformSupport();
@@ -255,6 +596,24 @@ export class PostDetector {
     }
   }
 
+  private addTooltip(button: HTMLButtonElement | null, text: string) {
+    if (!button) return;
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'blackout-tooltip';
+    tooltip.textContent = text;
+    button.style.position = 'relative';
+    button.appendChild(tooltip);
+
+    button.addEventListener('mouseenter', () => {
+      tooltip.style.opacity = '1';
+    });
+
+    button.addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+    });
+  }
+
   private extractPostData(element: Element): Post | null {
     if (!this.platform) return null;
 
@@ -320,22 +679,30 @@ export class PostDetector {
     if (element.hasAttribute('data-blackout-processed')) return;
 
     const postData = this.extractPostData(element);
-    if (!postData) return;
+    if (!postData) {
+      console.log('Failed to extract post data from element');
+      return;
+    }
+
+    console.log('Processing post:', {
+      id: postData.id,
+      platform: postData.platform,
+      contentLength: postData.content.length,
+      author: postData.author
+    });
 
     // Mark as processed
     element.setAttribute('data-blackout-processed', 'true');
 
-    // Create and inject the rating overlay
+    // Create and inject the rating overlay with loading state
     const overlay = document.createElement('div');
     overlay.className = 'blackout-rating-overlay';
     overlay.innerHTML = `
       <div class="blackout-rating">
-        <div class="blackout-score">...</div>
+        <div class="blackout-score loading">Analyzing</div>
         <div class="blackout-actions">
           <button class="blackout-hide">Hide</button>
-          <div class="blackout-tooltip">Temporarily hide this post from view</div>
           <button class="blackout-block">Block</button>
-          <div class="blackout-tooltip">Permanently block similar content</div>
         </div>
       </div>
     `;
@@ -344,9 +711,13 @@ export class PostDetector {
     (element as HTMLElement).style.position = 'relative';
     element.appendChild(overlay);
 
-    // Add click handlers for hide/block buttons
-    const hideButton = overlay.querySelector('.blackout-hide');
-    const blockButton = overlay.querySelector('.blackout-block');
+    // Add click handlers and tooltips for hide/block buttons
+    const hideButton = overlay.querySelector('.blackout-hide') as HTMLButtonElement;
+    const blockButton = overlay.querySelector('.blackout-block') as HTMLButtonElement;
+
+    // Add tooltips
+    this.addTooltip(hideButton, 'Temporarily hide this post');
+    this.addTooltip(blockButton, 'Permanently block similar content');
 
     hideButton?.addEventListener('click', () => {
       (element as HTMLElement).style.opacity = '0.1';
@@ -362,54 +733,134 @@ export class PostDetector {
     });
 
     // Request rating from background script
+    console.log('Sending REQUEST_RATING for post:', postData.id);
     chrome.runtime.sendMessage(
       { type: 'REQUEST_RATING', post: postData },
       (response) => {
+        console.log('Received rating response:', {
+          postId: postData.id,
+          rating: response?.rating,
+          fallback: response?.fallback,
+          cached: response?.cached,
+          error: chrome.runtime.lastError?.message
+        });
+        
         if (response && response.rating) {
-          this.updateRatingDisplay(overlay, response.rating, response.fallback);
+          this.updateRatingDisplay(overlay, response.rating, response.fallback, response.contentType);
           this.updateStats(document.querySelectorAll('[data-blackout-processed]').length);
+        } else {
+          console.error('No rating received for post:', postData.id);
         }
       }
     );
   }
 
-  private updateRatingDisplay(overlay: HTMLElement, rating: number, isFallback: boolean = false) {
+  private async updateRatingDisplay(overlay: HTMLElement, rating: number, isFallback: boolean = false, contentType?: { category: string; confidence: number }) {
     const scoreElement = overlay.querySelector('.blackout-score');
+    const ratingContainer = overlay.querySelector('.blackout-rating');
+    
     if (scoreElement) {
-      scoreElement.textContent = rating.toString();
+      // Remove loading class and update score
+      scoreElement.classList.remove('loading');
+      
+      // Add quality label based on score
+      let qualityLabel = '';
+      if (rating >= 80) qualityLabel = 'Excellent';
+      else if (rating >= 60) qualityLabel = 'Good';
+      else if (rating >= 40) qualityLabel = 'Fair';
+      else if (rating >= 20) qualityLabel = 'Poor';
+      else qualityLabel = 'Very Poor';
+      
+      scoreElement.innerHTML = `
+        <div style="font-size: 28px; line-height: 1;">${rating}</div>
+        <div style="font-size: 11px; font-weight: normal; margin-top: 2px; opacity: 0.8;">${qualityLabel}</div>
+      `;
       scoreElement.className = `blackout-score score-${Math.floor(rating / 20) * 20}${isFallback ? ' fallback' : ''}`;
+
+      // Add content classification if available
+      if (contentType && contentType.category && ratingContainer) {
+        const existingClassification = ratingContainer.querySelector('.blackout-classification');
+        if (!existingClassification) {
+          const classificationElement = document.createElement('div');
+          classificationElement.className = 'blackout-classification';
+          classificationElement.innerHTML = `
+            <span class="blackout-classification-icon">${getContentTypeIcon(contentType.category)}</span>
+            <span class="blackout-classification-label">${contentType.category}</span>
+          `;
+          
+          // Insert after score element
+          scoreElement.insertAdjacentElement('afterend', classificationElement);
+        }
+      }
 
       // Get the post container element
       const postElement = overlay.closest('[data-blackout-processed]') as HTMLElement;
       if (postElement) {
-        // Remove any existing warning classes
-        postElement.classList.remove('blackout-post-warning', 'blackout-warning-moderate', 'blackout-warning-severe');
+        // Remove any existing warning classes and filters
+        postElement.classList.remove(
+          'blackout-post-warning', 
+          'blackout-warning-moderate', 
+          'blackout-warning-severe',
+          'blackout-filtered',
+          'opacity-25',
+          'opacity-50',
+          'opacity-75',
+          'blur-light',
+          'blur-medium',
+          'blur-heavy',
+          'grayscale'
+        );
 
-        // Add warning classes based on rating
-        if (rating <= 40) {
-          postElement.classList.add('blackout-post-warning');
+        // Get filter settings from storage
+        try {
+          const result = await chrome.storage.local.get(['settings']);
+          const settings = result.settings?.settings || {
+            autoHideThreshold: 20,
+            dimThreshold: 40,
+            highlightThreshold: 80
+          };
 
-          // Remove existing warning label if any
-          const existingLabel = postElement.querySelector('.blackout-warning-label');
-          if (existingLabel) {
-            existingLabel.remove();
+          // Apply filters based on rating and thresholds
+          if (rating <= settings.autoHideThreshold) {
+            // Auto-hide very low quality content
+            postElement.classList.add('blackout-filtered', 'blur-heavy', 'opacity-25');
+          } else if (rating <= settings.dimThreshold) {
+            // Dim low quality content
+            postElement.classList.add('blackout-filtered', 'blur-medium', 'opacity-50');
+          } else if (rating <= 60) {
+            // Light filter for moderate content
+            postElement.classList.add('blackout-filtered', 'opacity-75');
           }
+          // High quality content (> 60) remains unfiltered
 
-          // Add warning label
-          const warningLabel = document.createElement('div');
-          warningLabel.className = 'blackout-warning-label';
+          // Add warning classes based on rating
+          if (rating <= 40) {
+            postElement.classList.add('blackout-post-warning');
 
-          if (rating <= 20) {
-            postElement.classList.add('blackout-warning-severe');
-            warningLabel.textContent = '⚠️ Potentially Harmful Content';
-            warningLabel.style.backgroundColor = '#EF5350';
-          } else {
-            postElement.classList.add('blackout-warning-moderate');
-            warningLabel.textContent = '⚠️ Low Quality Content';
-            warningLabel.style.backgroundColor = '#FFA726';
+            // Remove existing warning label if any
+            const existingLabel = postElement.querySelector('.blackout-warning-label');
+            if (existingLabel) {
+              existingLabel.remove();
+            }
+
+            // Add warning label
+            const warningLabel = document.createElement('div');
+            warningLabel.className = 'blackout-warning-label';
+
+            if (rating <= 20) {
+              postElement.classList.add('blackout-warning-severe');
+              warningLabel.textContent = '⚠️ Potentially Harmful Content';
+              warningLabel.style.backgroundColor = '#EF5350';
+            } else {
+              postElement.classList.add('blackout-warning-moderate');
+              warningLabel.textContent = '⚠️ Low Quality Content';
+              warningLabel.style.backgroundColor = '#FFA726';
+            }
+
+            postElement.insertBefore(warningLabel, postElement.firstChild);
           }
-
-          postElement.insertBefore(warningLabel, postElement.firstChild);
+        } catch (error) {
+          console.error('Error getting filter settings:', error);
         }
       }
     }
@@ -455,3 +906,20 @@ export class PostDetector {
 // Initialize and start the detector
 const detector = new PostDetector();
 detector.start();
+
+// Initialize LinkedIn feed analytics if on LinkedIn
+if (window.location.hostname.includes('linkedin.com')) {
+  console.log('LinkedIn detected - initializing feed analytics');
+  
+  // Check if analytics are enabled (default to true for now)
+  chrome.storage.local.get(['settings'], (result) => {
+    const analyticsEnabled = result.settings?.settings?.analytics?.enableFeedAnalytics ?? true;
+    
+    if (analyticsEnabled) {
+      console.log('Starting LinkedIn feed analyzer...');
+      feedAnalyzer.startObserving();
+    } else {
+      console.log('LinkedIn feed analytics disabled in settings');
+    }
+  });
+}

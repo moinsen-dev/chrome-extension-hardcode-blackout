@@ -23,7 +23,13 @@ export interface ContentRating {
   contentQuality: ContentQuality;
   emotionalImpact: EmotionalImpact;
   userPreferences: UserPreferences;
+  contentType?: ContentClassification;
   timestamp: number;
+}
+
+export interface ContentClassification {
+  category: 'personal' | 'business' | 'tech' | 'finance' | 'news' | 'entertainment' | 'education' | 'promotion' | 'politics' | 'other';
+  confidence: number;
 }
 
 // Post Types
@@ -59,12 +65,24 @@ export interface FilterSettings {
 
 export interface ModelSettings {
   modelPath: string;
-  modelType: string;
+  modelType: 'fast' | 'default' | 'accurate' | 'deepscaler' | 'tiny';
   inferenceSettings: {
     maxTokens: number;
     temperature: number;
     topP: number;
+    contextLength?: number;  // Added for DeepScaleR's extended context support
   };
+  backend?: 'ollama';  // Only Ollama backend supported
+  ollamaModel?: string;
+}
+
+// Add DeepScaleR specific types
+export interface DeepScalerConfig {
+  contextSize: number;
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+  groupSize?: number;  // For Group Relative Policy Optimization
 }
 
 // Storage Types
@@ -74,4 +92,9 @@ export interface StorageData {
   cachedRatings: { [postId: string]: ContentRating };
   userFeedback: { [postId: string]: number };
   isInitialized: boolean;  // Track if extension has completed initial setup
+  analytics?: {
+    enableFeedAnalytics: boolean;
+    linkedinOnly: boolean;
+    maxStoredPosts: number;
+  };
 }

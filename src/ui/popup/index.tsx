@@ -11,6 +11,12 @@ const Popup: React.FC = () => {
         averageScore: 0,
         blockedPosts: 0
     });
+    const [analyticsStats, setAnalyticsStats] = useState({
+        totalPosts: 0,
+        uniqueAuthors: 0,
+        avgEngagement: 0,
+        enabled: false
+    });
 
     // Add listener for storage changes
     useEffect(() => {
@@ -45,12 +51,34 @@ const Popup: React.FC = () => {
         }
     };
 
+    const fetchAnalyticsStats = async () => {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'GET_STATISTICS' });
+            if (response.success && response.stats) {
+                setAnalyticsStats({
+                    totalPosts: response.stats.totalPosts || 0,
+                    uniqueAuthors: response.stats.uniqueAuthors || 0,
+                    avgEngagement: response.stats.avgEngagement || 0,
+                    enabled: true
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch analytics stats:', error);
+        }
+    };
+
     useEffect(() => {
         // Load initial settings and stats
         chrome.storage.local.get(['settings', 'cachedRatings'], (result) => {
             if (result.settings) {
                 setFilterStrength(result.settings.settings?.autoHideThreshold || 20);
                 setEnabled(result.settings.isInitialized || false);
+                
+                // Check if analytics are enabled
+                const analyticsEnabled = result.settings?.analytics?.enableFeedAnalytics ?? true;
+                if (analyticsEnabled) {
+                    fetchAnalyticsStats();
+                }
             }
             if (result.cachedRatings) {
                 updateStats(result.cachedRatings);
@@ -117,7 +145,7 @@ const Popup: React.FC = () => {
                     </Typography>
                 </Box>
 
-                <Typography variant="subtitle2" gutterBottom sx={{ color: 'black', fontWeight: 600 }}>Statistics</Typography>
+                <Typography variant="subtitle2" gutterBottom sx={{ color: 'black', fontWeight: 600 }}>Filtering Statistics</Typography>
                 <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" sx={{ color: 'black' }}>
                         Average Score: {stats.averageScore}
@@ -126,6 +154,23 @@ const Popup: React.FC = () => {
                         Blocked Posts: {stats.blockedPosts}
                     </Typography>
                 </Box>
+
+                {analyticsStats.enabled && analyticsStats.totalPosts > 0 && (
+                    <>
+                        <Typography variant="subtitle2" gutterBottom sx={{ color: 'black', fontWeight: 600 }}>LinkedIn Analytics</Typography>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" sx={{ color: 'black' }}>
+                                Posts Captured: {analyticsStats.totalPosts}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'black' }}>
+                                Unique Authors: {analyticsStats.uniqueAuthors}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'black' }}>
+                                Avg. Engagement: {analyticsStats.avgEngagement}
+                            </Typography>
+                        </Box>
+                    </>
+                )}
 
                 <Typography variant="subtitle2" gutterBottom sx={{ color: 'black', fontWeight: 600 }}>Quick Settings</Typography>
                 <Box sx={{ mb: 2 }}>

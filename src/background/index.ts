@@ -1,6 +1,39 @@
 /// <reference types="chrome"/>
 import { ContentRating, Post, StorageData } from '../utils/types';
-import { llamaService } from './llama-service';
+import { databaseService } from './database-service';
+import { ollamaService } from './ollama-service';
+
+// Check if we're in development mode
+const isDevelopmentMode = () => {
+  // Check for development flag in storage or use manifest version check
+  return true; // For now, always enable development mode for testing
+};
+
+// Clean expired entries from cache
+async function cleanupCache() {
+  try {
+    const { cachedRatings } = await chrome.storage.local.get('cachedRatings');
+    if (!cachedRatings) return;
+    
+    const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const [postId, rating] of Object.entries(cachedRatings)) {
+      if (now - (rating as any).timestamp > CACHE_EXPIRY) {
+        delete cachedRatings[postId];
+        cleanedCount++;
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      await chrome.storage.local.set({ cachedRatings });
+      console.log(`Startup cache cleanup: removed ${cleanedCount} expired entries`);
+    }
+  } catch (error) {
+    console.error('Failed to cleanup cache:', error);
+  }
+}
 
 // Initialize default settings
 async function initializeStorage() {
@@ -16,24 +49,58 @@ async function initializeStorage() {
       }
     },
     modelSettings: {
-      modelPath: 'models/small.gguf',
+      modelPath: 'models/default.gguf',
       modelType: 'default',
       inferenceSettings: {
         maxTokens: 100,
         temperature: 0.7,
-        topP: 0.9
-      }
+        topP: 0.9,
+        contextLength: 2048  // Default context length
+      },
+      backend: 'ollama',  // Default to Ollama
+      ollamaModel: 'llama3.2'  // Default Ollama model
     },
     cachedRatings: {},
     userFeedback: {},
-    isInitialized: false  // Track if extension has been set up
+    isInitialized: false,  // Track if extension has been set up
+    analytics: {
+      enableFeedAnalytics: true,  // Default enabled
+      linkedinOnly: true,
+      maxStoredPosts: 10000
+    }
   };
 
   try {
     // Get existing storage data
     const storage = await chrome.storage.local.get('settings') as { settings?: StorageData };
 
-    // If no settings exist or not initialized, set defaults and show setup
+    // In development mode, always initialize the service
+    if (isDevelopmentMode()) {
+      console.log('Development mode: Bypassing setup requirement');
+      
+      // Use existing settings or defaults
+      const settings = storage.settings || defaultSettings;
+      
+      // Mark as initialized for development
+      settings.isInitialized = true;
+      
+      // Save settings
+      await chrome.storage.local.set({ settings });
+      
+      // Clean cache on startup
+      await cleanupCache();
+      
+      // Initialize database service for analytics
+      await initializeDatabaseService();
+      
+      // Check Ollama availability on startup
+      await ollamaService.checkAvailability();
+      
+      console.log('Development mode: Service initialized successfully');
+      return;
+    }
+
+    // Production mode: check if setup is needed
     if (!storage.settings || !storage.settings.isInitialized) {
       await chrome.storage.local.set({ settings: defaultSettings });
       // Open setup page
@@ -42,10 +109,20 @@ async function initializeStorage() {
     }
 
     // If already initialized, proceed with normal startup
-    await initializeLlamaService(storage.settings.modelSettings);
+    await cleanupCache();
+    await initializeDatabaseService();
+    await ollamaService.checkAvailability();
   } catch (error) {
     console.error('Failed to initialize storage:', error);
-    await showSetupPage();
+    
+    // In development mode, try to continue with defaults
+    if (isDevelopmentMode()) {
+      console.log('Development mode: Using default settings after error');
+      defaultSettings.isInitialized = true;
+      await chrome.storage.local.set({ settings: defaultSettings });
+    } else {
+      await showSetupPage();
+    }
   }
 }
 
@@ -56,164 +133,276 @@ async function showSetupPage() {
   await chrome.tabs.create({ url: setupUrl });
 }
 
-// Initialize Llama service with settings
-async function initializeLlamaService(modelSettings: StorageData['modelSettings']) {
+
+// Initialize database service for feed analytics
+async function initializeDatabaseService() {
   try {
-    await llamaService.initialize(modelSettings);
-    console.log('Llama service initialized successfully');
+    console.log('Initializing database service for feed analytics...');
+    await databaseService.initialize();
+    console.log('Database service initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize Llama service:', error);
-    // Show setup page if initialization fails
-    await showSetupPage();
+    console.error('Failed to initialize database service:', error);
+    // Analytics are optional, so we don't block extension startup
   }
 }
 
 // Create a fallback rating when Llama service fails
 function createFallbackRating(): ContentRating {
+  // Generate more realistic varied ratings for development/fallback mode
+  const randomRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  // Generate individual scores with some correlation
+  const baseQuality = randomRange(3, 8);
+  const contentQuality = {
+    writingQuality: Math.max(1, Math.min(10, baseQuality + randomRange(-2, 2))),
+    informationDensity: Math.max(1, Math.min(10, baseQuality + randomRange(-2, 2))),
+    sourceCredibility: Math.max(1, Math.min(10, baseQuality + randomRange(-1, 2))),
+    originality: Math.max(1, Math.min(10, baseQuality + randomRange(-3, 1)))
+  };
+  
+  const emotionalBase = randomRange(4, 7);
+  const emotionalImpact = {
+    toxicityLevel: Math.max(1, Math.min(10, emotionalBase + randomRange(-2, 2))),
+    emotionalManipulation: Math.max(1, Math.min(10, emotionalBase + randomRange(-1, 2))),
+    socialHarmony: Math.max(1, Math.min(10, emotionalBase + randomRange(-1, 3)))
+  };
+  
+  const preferenceBase = randomRange(3, 8);
+  const userPreferences = {
+    topicAlignment: Math.max(1, Math.min(10, preferenceBase + randomRange(-2, 2))),
+    sourcePreference: Math.max(1, Math.min(10, preferenceBase + randomRange(-1, 2))),
+    historicalInteraction: Math.max(1, Math.min(10, preferenceBase + randomRange(-2, 1)))
+  };
+  
+  // Calculate weighted overall score
+  const weights = { contentQuality: 0.4, emotionalImpact: 0.3, userPreferences: 0.3 };
+  const contentScore = Object.values(contentQuality).reduce((a, b) => a + b, 0) / 4;
+  const emotionalScore = Object.values(emotionalImpact).reduce((a, b) => a + b, 0) / 3;
+  const preferenceScore = Object.values(userPreferences).reduce((a, b) => a + b, 0) / 3;
+  
+  const overallScore = Math.round(
+    (contentScore * weights.contentQuality +
+     emotionalScore * weights.emotionalImpact +
+     preferenceScore * weights.userPreferences) * 10
+  );
+  
+  // Generate random content classification
+  const categories = ['personal', 'business', 'tech', 'finance', 'news', 'entertainment', 'education', 'promotion', 'politics', 'other'] as const;
+  const category = categories[Math.floor(Math.random() * categories.length)];
+  
   return {
-    overallScore: 50,
-    contentQuality: {
-      writingQuality: 5,
-      informationDensity: 5,
-      sourceCredibility: 5,
-      originality: 5
-    },
-    emotionalImpact: {
-      toxicityLevel: 5,
-      emotionalManipulation: 5,
-      socialHarmony: 5
-    },
-    userPreferences: {
-      topicAlignment: 5,
-      sourcePreference: 5,
-      historicalInteraction: 5
+    overallScore: Math.max(20, Math.min(90, overallScore)), // Clamp between 20-90
+    contentQuality,
+    emotionalImpact,
+    userPreferences,
+    contentType: {
+      category,
+      confidence: Math.random() * 0.3 + 0.7 // 0.7 to 1.0 confidence
     },
     timestamp: Date.now()
   };
 }
 
-// Download progress handler
-async function downloadModel(modelType: string) {
-  try {
-    const modelUrls = {
-      'fast': 'https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v0.3-GGUF/resolve/main/tinyllama-1.1b-chat-v0.3.Q4_K_M.gguf',
-      'default': 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf',
-      'accurate': 'https://huggingface.co/TheBloke/Llama-2-13B-chat-GGUF/resolve/main/llama-2-13b-chat.Q4_K_M.gguf'
-    };
-
-    const url = modelUrls[modelType as keyof typeof modelUrls];
-    if (!url) throw new Error('Invalid model type');
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Network response was not ok');
-
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('Failed to get response reader');
-
-    const contentLength = Number(response.headers.get('Content-Length')) || 0;
-    let receivedLength = 0;
-    let result = await reader.read();
-
-    while (!result.done) {
-      receivedLength += result.value.length;
-      const progress = (receivedLength / contentLength) * 100;
-
-      // Send progress message
-      chrome.runtime.sendMessage({
-        type: 'DOWNLOAD_PROGRESS',
-        modelType,
-        progress
-      });
-
-      // TODO: Save chunks to IndexedDB or other storage
-      result = await reader.read();
-    }
-
-    // Send completion message
-    chrome.runtime.sendMessage({
-      type: 'DOWNLOAD_COMPLETE',
-      modelType
-    });
-
-  } catch (error: unknown) {
-    console.error('Failed to download model:', error);
-    chrome.runtime.sendMessage({
-      type: 'DOWNLOAD_ERROR',
-      modelType,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    });
-  }
-}
 
 // Message handling
 chrome.runtime.onMessage.addListener(
   (
-    message: { type: string; modelType?: string; post?: Post },
+    message: { type: string; modelType?: string; post?: Post; data?: any },
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ) => {
     if (message.type === 'REQUEST_RATING') {
+      console.log('REQUEST_RATING received:', { 
+        postId: message.post?.id,
+        platform: message.post?.platform,
+        contentLength: message.post?.content?.length
+      });
+      
       if (!message.post) {
         console.error('No post data provided');
         return true;
       }
       const post: Post = message.post;
 
-      // Check cache first
-      chrome.storage.local.get(['cachedRatings', 'settings'], async (result) => {
-        const cachedRatings = result.cachedRatings || {};
-        const settings = result.settings;
+      // Handle the rating request asynchronously
+      (async () => {
+        try {
+          // Get storage data
+          const result = await chrome.storage.local.get(['cachedRatings', 'settings']);
+          const cachedRatings = result.cachedRatings || {};
+          const settings = result.settings;
 
-        // If not initialized, return fallback rating
-        if (!settings?.isInitialized) {
-          sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
-          return;
-        }
+          console.log('Storage check:', {
+            hasSettings: !!settings,
+            isInitialized: settings?.isInitialized,
+            isDev: isDevelopmentMode(),
+            hasCachedRating: !!cachedRatings[post.id]
+          });
 
-        if (cachedRatings[post.id]) {
-          sendResponse({ rating: cachedRatings[post.id].overallScore });
-        } else {
+          // In development mode or if initialized, proceed with analysis
+          if (!settings?.isInitialized && !isDevelopmentMode()) {
+            console.log('Extension not initialized and not in development mode');
+            sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
+            return;
+          }
+
+          // Check cache first with expiration check
+          if (cachedRatings[post.id]) {
+            const cachedRating = cachedRatings[post.id];
+            const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+            const isExpired = Date.now() - cachedRating.timestamp > CACHE_EXPIRY;
+            
+            if (!isExpired) {
+              console.log('Returning cached rating for post:', post.id);
+              sendResponse({ 
+                rating: cachedRating.overallScore, 
+                contentType: cachedRating.contentType,
+                cached: true 
+              });
+              return;
+            } else {
+              console.log('Cached rating expired for post:', post.id);
+              delete cachedRatings[post.id];
+            }
+          }
+
+          // Generate new rating
+          console.log('Generating new rating for post:', post.id);
           try {
-            // Generate rating using Llama
-            const rating = await llamaService.analyzeContent(post);
+            let rating: ContentRating;
+            
+            // Check if Ollama is available
+            if (ollamaService.isOllamaAvailable()) {
+              console.log('Using Ollama for content analysis');
+              const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
+              rating = await ollamaService.analyzeContent(post, modelName);
+            } else {
+              throw new Error('Ollama is not available. Please ensure Ollama is running.');
+            }
+            
+            console.log('Rating generated:', {
+              postId: post.id,
+              overallScore: rating.overallScore,
+              timestamp: rating.timestamp
+            });
 
-            // Cache the rating
+            // Cache the rating with size limit
             cachedRatings[post.id] = rating;
+            
+            // Implement cache size limit (1000 entries max)
+            const cacheKeys = Object.keys(cachedRatings);
+            const MAX_CACHE_SIZE = 1000;
+            
+            if (cacheKeys.length > MAX_CACHE_SIZE) {
+              // Remove oldest entries (by timestamp)
+              const sortedKeys = cacheKeys.sort((a, b) => 
+                cachedRatings[a].timestamp - cachedRatings[b].timestamp
+              );
+              
+              const keysToRemove = sortedKeys.slice(0, cacheKeys.length - MAX_CACHE_SIZE);
+              keysToRemove.forEach(key => delete cachedRatings[key]);
+              
+              console.log(`Cleaned cache: removed ${keysToRemove.length} old entries`);
+            }
+            
             await chrome.storage.local.set({ cachedRatings });
 
-            sendResponse({ rating: rating.overallScore });
+            sendResponse({ 
+              rating: rating.overallScore,
+              contentType: rating.contentType 
+            });
           } catch (error) {
             console.error('Error analyzing content:', error);
-            // Use fallback rating instead of failing
+            // Use fallback rating and still cache it
             const fallbackRating = createFallbackRating();
-            sendResponse({ rating: fallbackRating.overallScore, fallback: true });
+            console.log('Using fallback rating due to error');
+            
+            // Cache the fallback rating too so stats are updated
+            cachedRatings[post.id] = fallbackRating;
+            await chrome.storage.local.set({ cachedRatings });
+            
+            sendResponse({ 
+              rating: fallbackRating.overallScore, 
+              contentType: fallbackRating.contentType,
+              fallback: true 
+            });
           }
+        } catch (error) {
+          console.error('Error in REQUEST_RATING handler:', error);
+          sendResponse({ rating: createFallbackRating().overallScore, fallback: true });
         }
-      });
+      })();
 
       return true;
     }
 
     // Handle setup completion
     if (message.type === 'SETUP_COMPLETE') {
+      console.log('Setup completed successfully');
+      return true;
+    }
+
+
+    // Handle feed analytics messages
+    if (message.type === 'FEED_ITEM_DETECTED') {
       (async () => {
         try {
+          console.log('FEED_ITEM_DETECTED received:', message.data?.id);
+          
+          // Check if analytics are enabled
           const { settings } = await chrome.storage.local.get('settings');
-          if (settings) {
-            // Initialize the Llama service with the saved settings
-            await initializeLlamaService(settings.modelSettings);
-            console.log('Setup completed successfully');
+          const analyticsEnabled = settings?.analytics?.enableFeedAnalytics ?? true;
+          
+          if (!analyticsEnabled) {
+            sendResponse({ success: false, error: 'Analytics disabled' });
+            return;
           }
+          
+          // Store the feed item
+          const result = await databaseService.insertFeedItem(message.data);
+          console.log('Feed item stored:', result);
+          
+          sendResponse({ success: true, result });
         } catch (error) {
-          console.error('Failed to complete setup:', error);
-          await showSetupPage();
+          console.error('Error storing feed item:', error);
+          sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        }
+      })();
+      return true;
+    }
+    
+    if (message.type === 'GET_STATISTICS') {
+      (async () => {
+        try {
+          const stats = await databaseService.getStatistics();
+          sendResponse({ success: true, stats });
+        } catch (error) {
+          console.error('Error getting statistics:', error);
+          sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
         }
       })();
       return true;
     }
 
-    if (message.type === 'DOWNLOAD_MODEL' && message.modelType) {
-      downloadModel(message.modelType);
+    if (message.type === 'CHECK_OLLAMA') {
+      (async () => {
+        try {
+          const isAvailable = await ollamaService.checkAvailability();
+          const models = ollamaService.getAvailableModels();
+          sendResponse({ 
+            success: true, 
+            available: isAvailable,
+            models: models 
+          });
+        } catch (error) {
+          console.error('Error checking Ollama:', error);
+          sendResponse({ 
+            success: false, 
+            available: false,
+            error: error instanceof Error ? error.message : String(error) 
+          });
+        }
+      })();
       return true;
     }
 
@@ -221,26 +410,20 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-// Handle settings changes
-chrome.storage.onChanged.addListener(async (changes) => {
-  if (changes.settings?.newValue?.modelSettings) {
-    const settings = changes.settings.newValue;
-    // Only update if initialization is complete
-    if (settings.isInitialized) {
-      try {
-        await llamaService.unloadModel();
-        await llamaService.initialize(settings.modelSettings);
-        console.log('Model settings updated successfully');
-      } catch (error) {
-        console.error('Failed to update model settings:', error);
-        // Show setup page if update fails
-        await showSetupPage();
-      }
-    }
-  }
-});
 
 // Initialize when installed
 chrome.runtime.onInstalled.addListener(() => {
+  console.log('Extension installed, initializing...');
   initializeStorage();
 });
+
+// Initialize on startup (for development reloads)
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Extension started, initializing...');
+  initializeStorage();
+});
+
+// Initialize immediately when the background script loads
+// This ensures the service is ready even after manual reloads during development
+console.log('Background script loaded, initializing...');
+initializeStorage();

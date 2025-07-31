@@ -8,7 +8,6 @@ module.exports = {
     content: "./src/content/content-script.ts",
     popup: "./src/ui/popup/index.tsx",
     options: "./src/ui/options/index.tsx",
-    "llama.worker": "./src/background/llama.worker.ts",
   },
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -47,7 +46,7 @@ module.exports = {
         { from: "src/options.html", to: "options.html" },
         { from: "src/content/styles.css", to: "styles.css" },
         { from: "icons", to: "icons" },
-        { from: "src/llama-wasm/llama.wasm", to: "llama.wasm" },
+        { from: "node_modules/sql.js/dist/sql-wasm.wasm", to: "sql-wasm.wasm" },
       ],
     }),
   ],

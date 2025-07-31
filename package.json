@@ -1,6 +1,6 @@
 {
   "name": "chrome-extension-hardcode-blackout",
-  "version": "0.3.1",
+  "version": "0.5.0",
   "description": "A sophisticated Chrome extension for content filtering with local AI processing",
   "main": "dist/background.js",
   "scripts": {
@@ -11,8 +11,6 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "prepare-model": "node scripts/prepare-model.js",
-    "postinstall": "npm run prepare-model",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -32,9 +30,11 @@
   "dependencies": {
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0",
+    "@mui/icons-material": "^5.18.0",
     "@mui/material": "^5.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "sql.js": "^1.13.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.0.0",
@@ -47,6 +47,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@types/sql.js": "^1.4.9",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "autoprefixer": "^10.0.0",
