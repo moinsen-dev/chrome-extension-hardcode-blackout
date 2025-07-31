@@ -115,8 +115,26 @@ Rate each aspect on a scale of 1-10:
 - Emotional Impact (toxicityLevel, emotionalManipulation, socialHarmony)
 - User Preferences (topicAlignment, sourcePreference, historicalInteraction)
 
-Also classify the content into one of these categories:
-personal, business, tech, finance, news, entertainment, education, promotion, politics, other
+CONTENT CLASSIFICATION GUIDE:
+- personal: Personal stories, life updates, emotional experiences, opinions, casual conversations
+- business: Business strategies, company updates, professional insights, entrepreneurship, management tips
+- tech: Technology news, software development, IT topics, gadgets, AI/ML, cybersecurity
+- finance: Financial markets, investments, economic news, banking, cryptocurrency, trading
+- news: Current events, journalism, breaking news, media reports (NOT company PR)
+- entertainment: Movies, music, games, sports, celebrity news, humor, memes
+- education: Tutorials, courses, learning resources, how-to guides, academic content, skill development
+- advertisement: Product promotions, sponsored content, commercial offers, sales pitches, marketing campaigns
+- promotion: Personal branding, self-promotion, networking posts, achievements (non-commercial)
+- politics: Political news, government policies, elections, political opinions, activism
+- other: Content that doesn't clearly fit other categories
+
+CLASSIFICATION SIGNALS:
+- Look for [SPONSORED] tag for advertisements
+- Check for promotional language: "Buy now", "Limited offer", "Sign up", "Get yours"
+- Company posts about products/services = advertisement
+- Individual sharing achievements = promotion
+- Teaching/explaining concepts = education
+- Product reviews by users = personal or tech/business (not advertisement)
 
 Respond ONLY with valid JSON in this exact format:
 {
@@ -157,11 +175,38 @@ Respond ONLY with valid JSON in this exact format:
     }
 
     private createAnalysisPrompt(post: Post): string {
+        const isSponsored = post.metadata?.isSponsored || post.content.includes('[SPONSORED]');
+        const cleanContent = post.content.replace('[SPONSORED] ', '');
+        
+        let contextNotes = [];
+        
+        if (isSponsored) {
+            contextNotes.push('This is a SPONSORED/PROMOTED post');
+        }
+        
+        if (post.metadata?.isCompanyAccount) {
+            contextNotes.push('Posted by a COMPANY/BUSINESS account');
+        }
+        
+        if (post.metadata?.hasPromotionalCTA) {
+            contextNotes.push('Contains promotional call-to-action language');
+        }
+        
+        if (post.metadata?.hasExternalLinks) {
+            contextNotes.push('Contains external links');
+        }
+        
         return `Analyze this social media post and rate it on multiple dimensions:
 
-Content: "${post.content}"
+Content: "${cleanContent}"
 Author: ${post.author}
 Platform: ${post.platform}
+${contextNotes.length > 0 ? '\nContext:\n' + contextNotes.map(note => `- ${note}`).join('\n') : ''}
+
+Consider all the content classification guidelines and signals provided in the system prompt.
+If this appears to be a commercial advertisement or sponsored content, classify it as "advertisement".
+If it's personal self-promotion or networking, classify it as "promotion".
+News organizations sharing articles should be classified as "news" not "advertisement".
 
 Provide ratings in JSON format as specified.`;
     }

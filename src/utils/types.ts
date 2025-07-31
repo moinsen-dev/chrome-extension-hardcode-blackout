@@ -28,7 +28,7 @@ export interface ContentRating {
 }
 
 export interface ContentClassification {
-  category: 'personal' | 'business' | 'tech' | 'finance' | 'news' | 'entertainment' | 'education' | 'promotion' | 'politics' | 'other';
+  category: 'personal' | 'business' | 'tech' | 'finance' | 'news' | 'entertainment' | 'education' | 'advertisement' | 'promotion' | 'politics' | 'other';
   confidence: number;
 }
 
@@ -40,6 +40,12 @@ export interface Post {
   author: string;
   timestamp: number;
   rating?: ContentRating;
+  metadata?: {
+    isSponsored?: boolean;
+    isCompanyAccount?: boolean;
+    hasPromotionalCTA?: boolean;
+    hasExternalLinks?: boolean;
+  };
 }
 
 // UI Types

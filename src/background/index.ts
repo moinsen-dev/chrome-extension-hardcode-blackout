@@ -187,7 +187,7 @@ function createFallbackRating(): ContentRating {
   );
   
   // Generate random content classification
-  const categories = ['personal', 'business', 'tech', 'finance', 'news', 'entertainment', 'education', 'promotion', 'politics', 'other'] as const;
+  const categories = ['personal', 'business', 'tech', 'finance', 'news', 'entertainment', 'education', 'advertisement', 'promotion', 'politics', 'other'] as const;
   const category = categories[Math.floor(Math.random() * categories.length)];
   
   return {

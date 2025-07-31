@@ -5,10 +5,17 @@ import { feedAnalyzer } from './feed-analyzer';
 const snackbarStyles = `
 .blackout-rating-overlay {
   position: absolute;
-  top: 8px;
+  top: 40px;
   right: 8px;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Responsive positioning for smaller posts */
+@media (max-height: 200px) {
+  .blackout-rating-overlay {
+    top: 20px;
+  }
 }
 
 .blackout-rating {
@@ -483,7 +490,8 @@ function getContentTypeIcon(category: string): string {
     'news': '📰',          // News/Current events
     'entertainment': '🎬', // Entertainment
     'education': '📚',     // Educational content
-    'promotion': '📢',     // Ads/Promotions
+    'advertisement': '🛍️', // Commercial ads/Sponsored content
+    'promotion': '📢',     // Personal promotion/Self-branding
     'politics': '🏛️',      // Political content
     'other': '📄'          // Other/Unknown
   };
@@ -624,32 +632,81 @@ export class PostDetector {
 
       let content = '';
       let author = '';
+      let metadata: Post['metadata'] = {};
 
       switch (this.platform) {
         case 'twitter':
           content = element.querySelector('[data-testid="tweetText"]')?.textContent || '';
           author = element.querySelector('[data-testid="User-Name"]')?.textContent || '';
+          
+          // Check for promoted tweets
+          metadata.isSponsored = element.querySelector('[data-testid="tweet-text-show-more-link"]')?.textContent?.includes('Promoted') || false;
           break;
+          
         case 'facebook':
           content = element.querySelector('.userContent')?.textContent || '';
           author = element.querySelector('.profileLink')?.textContent || '';
+          
+          // Check for sponsored posts
+          metadata.isSponsored = element.querySelector('.uiStreamSponsoredLink')?.textContent?.includes('Sponsored') || false;
           break;
+          
         case 'reddit':
           content = element.querySelector('[data-testid="post-content"]')?.textContent || '';
           author = element.querySelector('.author')?.textContent || '';
+          
+          // Check for promoted posts
+          metadata.isSponsored = element.querySelector('.promotedlink')?.textContent?.includes('promoted') || false;
           break;
+          
         case 'linkedin':
-          content = element.querySelector('.feed-shared-text')?.textContent || '';
-          author = element.querySelector('.feed-shared-actor__name')?.textContent || '';
+          // Extract multiple content elements for comprehensive analysis
+          const mainText = element.querySelector('.feed-shared-text')?.textContent || '';
+          const articleTitle = element.querySelector('.feed-shared-article__title')?.textContent || '';
+          const articleDescription = element.querySelector('.feed-shared-article__description')?.textContent || '';
+          const reshareCommentary = element.querySelector('.feed-shared-update-v2__commentary')?.textContent || '';
+          const sharedText = element.querySelector('.feed-shared-text-view')?.textContent || '';
+          
+          // Combine all text elements
+          content = [mainText, reshareCommentary, articleTitle, articleDescription, sharedText]
+            .filter(text => text && text.trim())
+            .join(' | ');
+          
+          // Get author information
+          author = element.querySelector('.feed-shared-actor__name')?.textContent || 
+                  element.querySelector('.feed-shared-actor__title')?.textContent || '';
+          
+          // LinkedIn specific metadata
+          metadata.isSponsored = element.querySelector('.feed-shared-actor__description')?.textContent?.includes('Promoted') ||
+                                element.querySelector('.feed-shared-text-view__text-mention')?.textContent?.includes('Sponsored') ||
+                                false;
+          
+          // Check if it's a company account (has followers count)
+          metadata.isCompanyAccount = element.querySelector('.feed-shared-actor__description')?.textContent?.includes('followers') || false;
+          
+          // Check for external links
+          metadata.hasExternalLinks = element.querySelector('.feed-shared-article__link-container') !== null ||
+                                     element.querySelector('.feed-shared-external-video__meta') !== null;
+          
+          if (metadata.isSponsored) {
+            content = '[SPONSORED] ' + content;
+          }
           break;
       }
+      
+      // Check for promotional CTAs in content
+      const promotionalKeywords = ['buy now', 'sign up', 'register now', 'limited offer', 'discount', 'sale', 'get yours', 'click here', 'learn more', 'download now'];
+      metadata.hasPromotionalCTA = promotionalKeywords.some(keyword => 
+        content.toLowerCase().includes(keyword)
+      );
 
       return {
         id,
         platform: this.platform,
         content,
         author,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        metadata
       };
     } catch (error) {
       console.error('Error extracting post data:', error);
