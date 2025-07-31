@@ -216,6 +216,7 @@ class DatabaseService {
     SQL = null;
     async initialize() {
         try {
+            console.log('DatabaseService: Starting initialization...');
             // Initialize SQL.js with the WebAssembly file
             this.SQL = await sql_js__WEBPACK_IMPORTED_MODULE_0___default()({
                 locateFile: (file) => {
@@ -225,18 +226,33 @@ class DatabaseService {
                     return file;
                 }
             });
+            console.log('DatabaseService: SQL.js initialized');
             // Check if database exists in storage
             const stored = await chrome.storage.local.get('feedDatabase');
             if (stored.feedDatabase) {
                 // Load existing database
+                console.log('DatabaseService: Loading existing database');
                 const buf = new Uint8Array(stored.feedDatabase);
+                if (!this.SQL)
+                    throw new Error('SQL.js not initialized');
                 this.db = new this.SQL.Database(buf);
+                // Verify tables exist
+                if (this.db) {
+                    const tables = this.db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+                    console.log('DatabaseService: Existing tables:', tables && tables[0] ? tables[0].values : 'none');
+                }
             }
             else {
                 // Create new database
+                console.log('DatabaseService: Creating new database');
+                if (!this.SQL)
+                    throw new Error('SQL.js not initialized');
                 this.db = new this.SQL.Database();
                 await this.createTables();
             }
+            // Check and upgrade schema if needed
+            await this.upgradeSchema();
+            console.log('DatabaseService: Initialization complete');
         }
         catch (error) {
             console.error('Failed to initialize database:', error);
@@ -246,6 +262,7 @@ class DatabaseService {
     async createTables() {
         if (!this.db)
             throw new Error('Database not initialized');
+        console.log('DatabaseService: Creating tables with enhanced schema...');
         const schema = `
       CREATE TABLE IF NOT EXISTS authors (
         id TEXT PRIMARY KEY,
@@ -271,6 +288,15 @@ class DatabaseService {
         media_title TEXT,
         linkedin_timestamp TIMESTAMP,
         captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        -- AI Analysis fields
+        overall_score INTEGER,
+        content_category TEXT,
+        category_confidence REAL,
+        content_quality_score REAL,
+        emotional_impact_score REAL,
+        user_preference_score REAL,
+        is_ai_generated BOOLEAN,
+        ai_confidence REAL,
         FOREIGN KEY (author_id) REFERENCES authors(id)
       );
 
@@ -290,6 +316,61 @@ class DatabaseService {
     `;
         this.db.run(schema);
         await this.saveDatabase();
+        console.log('DatabaseService: Tables created successfully');
+    }
+    async upgradeSchema() {
+        if (!this.db)
+            throw new Error('Database not initialized');
+        try {
+            console.log('DatabaseService: Checking for schema upgrades...');
+            // Check if new AI analysis columns exist
+            const tableInfo = this.db.exec("PRAGMA table_info(feed_items)");
+            const columns = tableInfo[0]?.values.map(row => row[1]) || [];
+            const newColumns = [
+                'overall_score', 'content_category', 'category_confidence',
+                'content_quality_score', 'emotional_impact_score', 'user_preference_score',
+                'is_ai_generated', 'ai_confidence'
+            ];
+            let needsUpgrade = false;
+            for (const col of newColumns) {
+                if (!columns.includes(col)) {
+                    console.log(`DatabaseService: Missing column: ${col}`);
+                    needsUpgrade = true;
+                }
+            }
+            if (needsUpgrade) {
+                console.log('DatabaseService: Upgrading schema...');
+                // Add missing columns
+                const alterStatements = [
+                    'ALTER TABLE feed_items ADD COLUMN overall_score INTEGER',
+                    'ALTER TABLE feed_items ADD COLUMN content_category TEXT',
+                    'ALTER TABLE feed_items ADD COLUMN category_confidence REAL',
+                    'ALTER TABLE feed_items ADD COLUMN content_quality_score REAL',
+                    'ALTER TABLE feed_items ADD COLUMN emotional_impact_score REAL',
+                    'ALTER TABLE feed_items ADD COLUMN user_preference_score REAL',
+                    'ALTER TABLE feed_items ADD COLUMN is_ai_generated BOOLEAN',
+                    'ALTER TABLE feed_items ADD COLUMN ai_confidence REAL'
+                ];
+                for (const statement of alterStatements) {
+                    try {
+                        this.db.run(statement);
+                    }
+                    catch (error) {
+                        // Column might already exist, that's okay
+                        console.log(`DatabaseService: Column alter skipped (might exist): ${error}`);
+                    }
+                }
+                await this.saveDatabase();
+                console.log('DatabaseService: Schema upgrade completed');
+            }
+            else {
+                console.log('DatabaseService: Schema is up to date');
+            }
+        }
+        catch (error) {
+            console.error('DatabaseService: Schema upgrade failed:', error);
+            // Don't throw - let the database work with whatever schema it has
+        }
     }
     async saveDatabase() {
         if (!this.db)
@@ -329,8 +410,11 @@ class DatabaseService {
       INSERT INTO feed_items (
         id, author_id, content, post_type, reaction_count, 
         comment_count, repost_count, reaction_types, has_media, 
-        media_type, media_title, linkedin_timestamp
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        media_type, media_title, linkedin_timestamp,
+        overall_score, content_category, category_confidence,
+        content_quality_score, emotional_impact_score, user_preference_score,
+        is_ai_generated, ai_confidence
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
         stmt.run([
             item.id,
@@ -344,7 +428,16 @@ class DatabaseService {
             item.hasMedia ? 1 : 0,
             item.mediaType || null,
             item.mediaTitle || null,
-            item.linkedinTimestamp
+            item.linkedinTimestamp,
+            // AI Analysis fields
+            item.overallScore || null,
+            item.contentCategory || null,
+            item.categoryConfidence || null,
+            item.contentQualityScore || null,
+            item.emotionalImpactScore || null,
+            item.userPreferenceScore || null,
+            item.isAIGenerated ? 1 : 0,
+            item.aiConfidence || null
         ]);
         stmt.free();
         // Create initial engagement snapshot
@@ -371,6 +464,56 @@ class DatabaseService {
             snapshot.repostCount
         ]);
         stmt.free();
+    }
+    async processFeedItem(data) {
+        if (!this.db)
+            throw new Error('Database not initialized');
+        console.log('DatabaseService: Processing feed item:', data.id);
+        // Convert from feed analyzer format to database format
+        const author = data.author;
+        const feedItem = {
+            id: data.id,
+            authorId: author.id,
+            content: data.content,
+            postType: data.postType,
+            reactionCount: data.reactionCount,
+            commentCount: data.commentCount,
+            repostCount: data.repostCount,
+            reactionTypes: data.reactionTypes,
+            hasMedia: data.hasMedia,
+            mediaType: data.mediaType,
+            mediaTitle: data.mediaTitle,
+            linkedinTimestamp: data.timestamp
+        };
+        // Check if item already exists
+        const exists = await this.feedItemExists(feedItem.id);
+        if (exists) {
+            console.log('DatabaseService: Feed item already exists, updating engagement snapshot');
+            // Update engagement snapshot for existing item
+            await this.createEngagementSnapshot({
+                feedItemId: feedItem.id,
+                reactionCount: feedItem.reactionCount,
+                commentCount: feedItem.commentCount,
+                repostCount: feedItem.repostCount,
+                capturedAt: new Date().toISOString()
+            });
+            return { status: 'updated' };
+        }
+        console.log('DatabaseService: Inserting new feed item');
+        // Insert new author or update existing
+        await this.upsertAuthor(author);
+        // Insert new feed item
+        await this.insertFeedItem(feedItem);
+        // Create initial engagement snapshot
+        await this.createEngagementSnapshot({
+            feedItemId: feedItem.id,
+            reactionCount: feedItem.reactionCount,
+            commentCount: feedItem.commentCount,
+            repostCount: feedItem.repostCount,
+            capturedAt: new Date().toISOString()
+        });
+        console.log('DatabaseService: Feed item inserted successfully');
+        return { status: 'inserted' };
     }
     async getStatistics() {
         if (!this.db)
@@ -444,14 +587,239 @@ class DatabaseService {
                 });
             });
         }
+        // Enhanced Author Category Analysis
+        const authorCategoryAnalysis = [];
+        // Get detailed author analysis
+        const authorAnalysisResult = this.db.exec(`
+      SELECT 
+        a.id as author_id,
+        a.name as author_name,
+        a.verified,
+        COUNT(f.id) as post_count,
+        AVG(COALESCE(f.overall_score, 0)) as avg_score,
+        MIN(COALESCE(f.overall_score, 0)) as min_score,
+        MAX(COALESCE(f.overall_score, 0)) as max_score,
+        AVG(f.reaction_count + f.comment_count + f.repost_count) as avg_engagement,
+        COUNT(CASE WHEN f.is_ai_generated = 1 THEN 1 END) as ai_generated_count,
+        COUNT(CASE WHEN f.overall_score >= 80 THEN 1 END) as excellent_count,
+        COUNT(CASE WHEN f.overall_score >= 60 AND f.overall_score < 80 THEN 1 END) as good_count,
+        COUNT(CASE WHEN f.overall_score >= 40 AND f.overall_score < 60 THEN 1 END) as fair_count,
+        COUNT(CASE WHEN f.overall_score < 40 THEN 1 END) as poor_count,
+        MIN(DATE(f.captured_at)) as first_post_date,
+        MAX(DATE(f.captured_at)) as last_post_date
+      FROM authors a
+      LEFT JOIN feed_items f ON a.id = f.author_id
+      WHERE f.id IS NOT NULL
+      GROUP BY a.id, a.name, a.verified
+      ORDER BY post_count DESC
+      LIMIT 20
+    `)[0];
+        if (authorAnalysisResult) {
+            for (const row of authorAnalysisResult.values) {
+                const authorId = row[0];
+                const authorName = row[1];
+                const verified = row[2];
+                const postCount = row[3];
+                const avgScore = row[4];
+                const minScore = row[5];
+                const maxScore = row[6];
+                const avgEngagement = row[7];
+                const aiGeneratedCount = row[8];
+                const excellentCount = row[9];
+                const goodCount = row[10];
+                const fairCount = row[11];
+                const poorCount = row[12];
+                const firstPostDate = row[13];
+                const lastPostDate = row[14];
+                // Get category breakdown for this author
+                const stmt = this.db.prepare("SELECT content_category, COUNT(*) as count FROM feed_items WHERE author_id = ? AND content_category IS NOT NULL GROUP BY content_category ORDER BY count DESC");
+                const categories = [];
+                try {
+                    stmt.bind([authorId]);
+                    while (stmt.step()) {
+                        const row = stmt.getAsObject();
+                        categories.push({
+                            category: row.content_category,
+                            count: row.count,
+                            percentage: Math.round((row.count / postCount) * 100)
+                        });
+                    }
+                }
+                finally {
+                    stmt.free();
+                }
+                // Calculate posting frequency
+                let postingFrequency = 'Unknown';
+                if (firstPostDate && lastPostDate && postCount > 1) {
+                    const daysDiff = Math.max(1, Math.ceil((new Date(lastPostDate).getTime() - new Date(firstPostDate).getTime()) / (1000 * 60 * 60 * 24)));
+                    const postsPerDay = postCount / daysDiff;
+                    if (postsPerDay >= 1) {
+                        postingFrequency = `${Math.round(postsPerDay * 10) / 10} posts/day`;
+                    }
+                    else {
+                        const daysPerPost = Math.round(daysDiff / postCount);
+                        postingFrequency = `1 post/${daysPerPost} days`;
+                    }
+                }
+                authorCategoryAnalysis.push({
+                    authorName,
+                    authorId,
+                    postCount,
+                    categories,
+                    avgScore: Math.round(avgScore),
+                    scoreRange: { min: Math.round(minScore), max: Math.round(maxScore) },
+                    scoreDistribution: {
+                        excellent: excellentCount,
+                        good: goodCount,
+                        fair: fairCount,
+                        poor: poorCount
+                    },
+                    avgEngagement: Math.round(avgEngagement),
+                    aiGeneratedCount,
+                    aiGeneratedPercentage: Math.round((aiGeneratedCount / postCount) * 100),
+                    postingFrequency,
+                    verified: verified === 1
+                });
+            }
+        }
+        // Category Overview
+        const categoryOverviewResult = this.db.exec(`
+      SELECT 
+        content_category,
+        COUNT(*) as count,
+        AVG(COALESCE(overall_score, 0)) as avg_score,
+        GROUP_CONCAT(a.name) as authors
+      FROM feed_items f
+      JOIN authors a ON f.author_id = a.id
+      WHERE content_category IS NOT NULL
+      GROUP BY content_category
+      ORDER BY count DESC
+    `)[0];
+        const categoryOverview = [];
+        if (categoryOverviewResult) {
+            categoryOverviewResult.values.forEach((row) => {
+                const authors = (row[3] || '').split(', ').slice(0, 5); // Top 5 authors
+                categoryOverview.push({
+                    category: row[0],
+                    count: row[1],
+                    avgScore: Math.round(row[2] || 0),
+                    topAuthors: authors.filter(author => author.length > 0)
+                });
+            });
+        }
+        // Score Range Analysis
+        const scoreRangeResult = this.db.exec(`
+      SELECT 
+        CASE 
+          WHEN overall_score >= 80 THEN 'excellent'
+          WHEN overall_score >= 60 THEN 'good'
+          WHEN overall_score >= 40 THEN 'fair'
+          ELSE 'poor'
+        END as score_range,
+        COUNT(*) as count,
+        GROUP_CONCAT(a.name) as authors
+      FROM feed_items f
+      JOIN authors a ON f.author_id = a.id
+      WHERE overall_score IS NOT NULL
+      GROUP BY score_range
+      ORDER BY count DESC
+    `)[0];
+        const scoreRangeAnalysis = {
+            excellent: { count: 0, authors: [] },
+            good: { count: 0, authors: [] },
+            fair: { count: 0, authors: [] },
+            poor: { count: 0, authors: [] }
+        };
+        if (scoreRangeResult) {
+            scoreRangeResult.values.forEach((row) => {
+                const range = row[0];
+                const count = row[1];
+                const authors = (row[2] || '').split(', ').slice(0, 10);
+                if (range in scoreRangeAnalysis) {
+                    scoreRangeAnalysis[range] = {
+                        count,
+                        authors: authors.filter((author) => author.length > 0)
+                    };
+                }
+            });
+        }
         return {
             totalPosts,
             uniqueAuthors,
             avgEngagement: Math.round(avgEngagement),
             topAuthors,
             contentTypes,
-            dailyStats
+            dailyStats,
+            authorCategoryAnalysis,
+            categoryOverview,
+            scoreRangeAnalysis
         };
+    }
+    async getDebugInfo() {
+        if (!this.db)
+            throw new Error('Database not initialized');
+        const debugInfo = {
+            tables: [],
+            counts: {},
+            recentItems: [],
+            sampleData: {}
+        };
+        try {
+            // Get all tables
+            const tablesResult = this.db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+            if (tablesResult.length > 0) {
+                debugInfo.tables = tablesResult[0].values.map(row => row[0]);
+            }
+            // Get counts for each table
+            for (const tableName of debugInfo.tables) {
+                try {
+                    const countResult = this.db.exec(`SELECT COUNT(*) as count FROM ${tableName}`);
+                    debugInfo.counts[tableName] = countResult[0]?.values[0][0] || 0;
+                }
+                catch (error) {
+                    debugInfo.counts[tableName] = `error: ${error}`;
+                }
+            }
+            // Get recent feed items
+            try {
+                const recentResult = this.db.exec(`
+          SELECT id, content, author_id, overall_score, content_category, captured_at
+          FROM feed_items 
+          ORDER BY captured_at DESC 
+          LIMIT 5
+        `);
+                if (recentResult.length > 0) {
+                    debugInfo.recentItems = recentResult[0].values.map(row => ({
+                        id: row[0],
+                        content: row[1]?.substring(0, 100) + '...',
+                        authorId: row[2],
+                        score: row[3],
+                        category: row[4],
+                        capturedAt: row[5]
+                    }));
+                }
+            }
+            catch (error) {
+                debugInfo.recentItems = `error: ${error}`;
+            }
+            // Sample data from each main table
+            try {
+                const authorsResult = this.db.exec("SELECT COUNT(*), GROUP_CONCAT(name) as names FROM authors LIMIT 5");
+                if (authorsResult.length > 0) {
+                    debugInfo.sampleData.authors = {
+                        count: authorsResult[0].values[0][0],
+                        sampleNames: authorsResult[0].values[0][1]
+                    };
+                }
+            }
+            catch (error) {
+                debugInfo.sampleData.authors = `error: ${error}`;
+            }
+        }
+        catch (error) {
+            debugInfo.error = error instanceof Error ? error.message : String(error);
+        }
+        return debugInfo;
     }
     async exportData() {
         if (!this.db)
@@ -633,6 +1001,10 @@ Analyze the content for signs of AI generation. Look for:
 - Hedging language and lack of strong opinions
 - Perfect grammar but lacking authentic voice
 - Common AI phrases: "it's important to note", "in conclusion", "furthermore", "additionally"
+- Use of em-dash (—) instead of regular dash (-) or comma
+- Excessive emojis (3+ emojis in a single post)
+- Overly enthusiastic tone with multiple exclamation marks
+- Pattern of "Here's" or "Let's" at the beginning of sentences
 
 If content appears AI-generated, this should SIGNIFICANTLY impact the originality score (max 3/10).
 
@@ -671,7 +1043,8 @@ IMPORTANT DISTINCTIONS:
 - Product reviews by regular users = "personal" or relevant category (not "advertisement")
 - Educational tutorials teaching skills = "education"
 
-Respond ONLY with valid JSON in this exact format:
+Respond ONLY with valid JSON matching this EXACT structure:
+
 {
   "contentQuality": {
     "writingQuality": 7,
@@ -695,7 +1068,15 @@ Respond ONLY with valid JSON in this exact format:
   },
   "isAIGenerated": false,
   "aiConfidence": 0.2
-}`
+}
+
+Where:
+- All quality scores are 1-10 (higher is better except toxicity/manipulation)
+- category must be: personal, business, tech, finance, news, entertainment, education, advertisement, promotion, politics, or other
+- confidence and aiConfidence are 0-1 (decimal values)
+- isAIGenerated is boolean (true/false)
+
+CRITICAL: Return ONLY the JSON object, no additional text or explanation.`
             };
             // Chrome extension compatible fetch - no explicit timeout needed as Chrome handles it
             const response = await fetch(`${this.baseUrl}/api/generate`, {
@@ -846,7 +1227,7 @@ CRITICAL CLASSIFICATION RULES:
 
 PAY SPECIAL ATTENTION to platform signals in the context - if marked as sponsored/promoted, classify accordingly.
 
-Provide ratings in JSON format as specified.`;
+RESPONSE FORMAT: You MUST respond with ONLY a JSON object matching the exact structure shown above. Do not include any explanatory text before or after the JSON. The response must be valid, parseable JSON with all required fields.`;
     }
     async parseOllamaResponse(response) {
         try {
@@ -1552,7 +1933,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'FEED_ITEM_DETECTED') {
         (async () => {
             try {
-                console.log('FEED_ITEM_DETECTED received:', message.data?.id);
+                console.log('🔍 FEED_ITEM_DETECTED received:', {
+                    id: message.data?.id,
+                    author: message.data?.author?.name,
+                    contentLength: message.data?.content?.length,
+                    postType: message.data?.postType,
+                    timestamp: new Date().toISOString()
+                });
                 // Check if analytics are enabled
                 const { settings } = await chrome.storage.local.get('settings');
                 const analyticsEnabled = settings?.analytics?.enableFeedAnalytics ?? true;
@@ -1560,9 +1947,77 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     sendResponse({ success: false, error: 'Analytics disabled' });
                     return;
                 }
-                // Store the feed item
-                const result = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.insertFeedItem(message.data);
-                console.log('Feed item stored:', result);
+                // Enhance feed data with AI analysis
+                let enhancedFeedData = { ...message.data };
+                try {
+                    // Create a Post object for AI analysis
+                    const post = {
+                        id: message.data.id,
+                        platform: 'linkedin',
+                        content: message.data.content,
+                        author: message.data.author.name,
+                        timestamp: Date.now(),
+                        contextualInfo: {
+                            authorProfile: message.data.author.headline,
+                            postType: message.data.postType,
+                            hasMedia: message.data.hasMedia,
+                            hasLinks: false // Could be enhanced
+                        }
+                    };
+                    // Get AI analysis if Ollama is available
+                    if (_ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.isOllamaAvailable()) {
+                        console.log('Getting AI analysis for feed item:', message.data.id);
+                        const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
+                        // Add timeout for AI analysis
+                        const analysisPromise = _ollama_service__WEBPACK_IMPORTED_MODULE_1__.ollamaService.analyzeContent(post, modelName, settings?.settings);
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('AI analysis timeout')), 15000); // 15 second timeout
+                        });
+                        const rating = await Promise.race([analysisPromise, timeoutPromise]);
+                        // Add AI analysis to feed data
+                        enhancedFeedData.overallScore = rating.overallScore;
+                        enhancedFeedData.contentCategory = rating.contentType?.category;
+                        enhancedFeedData.categoryConfidence = rating.contentType?.confidence;
+                        enhancedFeedData.contentQualityScore = Object.values(rating.contentQuality).reduce((a, b) => a + b, 0) / 4;
+                        enhancedFeedData.emotionalImpactScore = Object.values(rating.emotionalImpact).reduce((a, b) => a + b, 0) / 3;
+                        enhancedFeedData.userPreferenceScore = Object.values(rating.userPreferences).reduce((a, b) => a + b, 0) / 3;
+                        enhancedFeedData.isAIGenerated = rating.isAIGenerated;
+                        enhancedFeedData.aiConfidence = rating.aiConfidence;
+                        console.log('AI analysis completed for feed item:', {
+                            id: message.data.id,
+                            score: rating.overallScore,
+                            category: rating.contentType?.category
+                        });
+                    }
+                    else {
+                        console.log('Ollama not available, storing feed item without AI analysis');
+                    }
+                }
+                catch (aiError) {
+                    console.warn('AI analysis failed for feed item, storing without analysis:', aiError);
+                    // Continue without AI analysis - we still want to store the basic feed data
+                }
+                // Store the feed item (with or without AI analysis)
+                console.log('📊 Storing feed item in database:', {
+                    id: enhancedFeedData.id,
+                    hasAIAnalysis: !!enhancedFeedData.overallScore,
+                    score: enhancedFeedData.overallScore,
+                    category: enhancedFeedData.contentCategory
+                });
+                const result = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.processFeedItem(enhancedFeedData);
+                console.log('✅ Feed item stored successfully:', result);
+                // Verify storage by getting recent statistics
+                try {
+                    const stats = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.getStatistics();
+                    console.log('📈 Current database stats after insert:', {
+                        totalPosts: stats.totalPosts,
+                        uniqueAuthors: stats.uniqueAuthors,
+                        lastUpdate: new Date().toISOString()
+                    });
+                }
+                catch (statsError) {
+                    console.error('⚠️ Could not get stats after insert:', statsError);
+                }
                 sendResponse({ success: true, result });
             }
             catch (error) {
@@ -1657,6 +2112,127 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Icon state update:', message.active ? 'active' : 'inactive');
         sendResponse({ success: true });
         return false; // Synchronous response
+    }
+    // Handle OPEN_OPTIONS message
+    if (message.type === 'OPEN_OPTIONS') {
+        chrome.runtime.openOptionsPage();
+        sendResponse({ success: true });
+        return false; // Synchronous response
+    }
+    // Test Analytics with Sample Data
+    if (message.type === 'TEST_ANALYTICS_INSERT') {
+        (async () => {
+            try {
+                console.log('🧪 TEST_ANALYTICS_INSERT: Creating sample feed item...');
+                const sampleFeedItem = {
+                    id: `test-${Date.now()}`,
+                    author: {
+                        id: 'test-author-1',
+                        name: 'Test Author',
+                        headline: 'Test Headline for Debug',
+                        profileUrl: 'https://linkedin.com/in/test-author',
+                        verified: false
+                    },
+                    content: 'This is a test post created for debugging analytics. It should appear in the analytics dashboard.',
+                    postType: 'post',
+                    reactionCount: 5,
+                    commentCount: 2,
+                    repostCount: 1,
+                    reactionTypes: ['like', 'celebrate'],
+                    hasMedia: false,
+                    timestamp: new Date().toISOString(),
+                    // Add AI analysis data for testing
+                    overallScore: 75,
+                    contentCategory: 'business',
+                    categoryConfidence: 0.85,
+                    contentQualityScore: 7.5,
+                    emotionalImpactScore: 6.2,
+                    userPreferenceScore: 8.1,
+                    isAIGenerated: false,
+                    aiConfidence: 0.1
+                };
+                const result = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.processFeedItem(sampleFeedItem);
+                console.log('🧪 Test feed item processed:', result);
+                // Get updated stats
+                const stats = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.getStatistics();
+                console.log('🧪 Updated stats after test insert:', stats);
+                sendResponse({ success: true, result, stats });
+            }
+            catch (error) {
+                console.error('🧪 TEST_ANALYTICS_INSERT error:', error);
+                sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+            }
+        })();
+        return true;
+    }
+    // Reset Database (for debugging)
+    if (message.type === 'RESET_DATABASE') {
+        (async () => {
+            try {
+                console.log('🔧 RESET_DATABASE: Clearing database...');
+                // Clear Chrome storage
+                await chrome.storage.local.remove(['feedDatabase', 'processedPostIds']);
+                // Reinitialize database
+                await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.initialize();
+                // Get new stats
+                const stats = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.getStatistics();
+                console.log('🔧 Database reset complete. New stats:', stats);
+                sendResponse({ success: true, stats });
+            }
+            catch (error) {
+                console.error('🔧 RESET_DATABASE error:', error);
+                sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+            }
+        })();
+        return true;
+    }
+    // Debug Analytics Flow
+    if (message.type === 'DEBUG_ANALYTICS') {
+        (async () => {
+            try {
+                const debugInfo = {
+                    timestamp: new Date().toISOString(),
+                    databaseStatus: 'unknown',
+                    tableInfo: [],
+                    recentInserts: [],
+                    storageInfo: {},
+                    feedProcessingStats: {}
+                };
+                // Test database connection
+                try {
+                    await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.initialize();
+                    debugInfo.databaseStatus = 'initialized';
+                    // Get table info
+                    const tables = await _database_service__WEBPACK_IMPORTED_MODULE_0__.databaseService.getDebugInfo();
+                    debugInfo.tableInfo = tables;
+                    console.log('DEBUG_ANALYTICS: Database tables:', tables);
+                }
+                catch (dbError) {
+                    debugInfo.databaseStatus = `error: ${dbError instanceof Error ? dbError.message : String(dbError)}`;
+                    console.error('DEBUG_ANALYTICS: Database error:', dbError);
+                }
+                // Check Chrome storage
+                try {
+                    const storage = await chrome.storage.local.get(['feedDatabase', 'processedPostIds', 'settings']);
+                    debugInfo.storageInfo = {
+                        hasFeedDatabase: !!storage.feedDatabase,
+                        feedDatabaseSize: storage.feedDatabase ? storage.feedDatabase.length : 0,
+                        processedPostsCount: storage.processedPostIds ? storage.processedPostIds.length : 0,
+                        analyticsEnabled: storage.settings?.analytics?.enableFeedAnalytics ?? 'unknown'
+                    };
+                    console.log('DEBUG_ANALYTICS: Storage info:', debugInfo.storageInfo);
+                }
+                catch (storageError) {
+                    console.error('DEBUG_ANALYTICS: Storage error:', storageError);
+                }
+                sendResponse({ success: true, debugInfo });
+            }
+            catch (error) {
+                console.error('DEBUG_ANALYTICS error:', error);
+                sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+            }
+        })();
+        return true;
     }
     return true;
 });

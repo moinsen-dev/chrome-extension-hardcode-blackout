@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hardcore Blackout",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "description": "A sophisticated Chrome extension for content filtering with local AI processing",
   "permissions": ["storage", "history", "webNavigation", "scripting"],
   "host_permissions": [
@@ -29,7 +29,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["llama.worker.js", "llama.wasm"],
+      "resources": ["llama.worker.js", "llama.wasm", "sql-wasm.wasm"],
       "matches": ["<all_urls>"]
     }
   ],

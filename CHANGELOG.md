@@ -5,6 +5,160 @@ All notable changes to the Hardcore Blackout Chrome extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2025-07-31
+
+### 🔧 Critical Bug Fixes & Debug Enhancement
+
+### Fixed
+- **🚨 Critical: Analytics Data Storage**: Fixed SQL syntax error preventing feed analytics from storing data
+  - Corrected `GROUP_CONCAT(DISTINCT column, separator)` syntax incompatible with SQL.js
+  - Now using standard `GROUP_CONCAT(column)` format
+  - Resolves "DISTINCT aggregates must have exactly one argument" error
+- **Database Schema Migration**: Fixed automatic column addition for existing databases
+- **Statistics Retrieval**: Analytics now properly display stored data
+
+### Added
+- **Comprehensive Debug Panel**: Real-time analytics debugging in extension options
+  - Database status and table information
+  - Storage size and processed posts tracking
+  - Recent feed items preview with AI analysis data
+  - Manual test insertion to verify functionality
+- **Enhanced Logging**: Complete data flow tracking from feed detection to storage
+  - Feed processing confirmation logs
+  - AI analysis status and results
+  - Database operation confirmations
+  - Statistics updates after each insertion
+- **Manual Testing Tools**: 
+  - "Test Insert" button for immediate functionality verification
+  - DEBUG_ANALYTICS message handler for deep inspection
+  - Browser console testing commands
+
+### Changed
+- **Error Resilience**: Database operations continue gracefully with schema upgrade failures
+- **Performance Monitoring**: Real-time tracking of processing statistics
+- **Development Experience**: Comprehensive debug documentation and testing tools
+
+### Technical Details
+- Fixed SQL.js compatibility issues with aggregate functions
+- Enhanced Chrome storage integration monitoring
+- Improved error handling throughout analytics pipeline
+- Added database schema version management
+
+## [0.7.0] - 2025-07-31
+
+### 🚀 Feed Analytics Activation & Status Window Enhancement
+
+### Added
+- **Feed Analytics Database Integration**: Connected existing components to enable data flow
+  - Created `processFeedItem` method to handle data conversion
+  - Added comprehensive logging for debugging database operations
+  - Implemented proper error handling throughout the pipeline
+- **Status Window Settings Access**: Quick access to extension settings
+  - Added settings gear icon to status indicator
+  - Click handler opens extension options page
+  - Smooth hover animations and visual feedback
+- **Enhanced Debug Logging**: Track data flow from extraction to storage
+  - Database initialization status
+  - Table creation verification
+  - Feed item processing confirmation
+
+### Fixed
+- **Analytics Data Display**: Resolved issue preventing stats from showing
+  - Fixed method naming mismatch (`insertFeedItem` vs `processFeedItem`)
+  - Corrected data format conversion between feed analyzer and database
+  - Added null safety checks for SQL.js initialization
+- **Status Window Position**: Moved up to avoid LinkedIn message overlap
+  - Changed from `bottom: 20px` to `bottom: 80px`
+  - Prevents interference with LinkedIn's messaging UI
+
+### Changed
+- **Status Window UI**: Enhanced with settings access
+  - Added settings button with hover effects
+  - Improved visual hierarchy with proper spacing
+  - Better accessibility with tooltips
+
+### Technical Details
+- Fixed TypeScript strict null checks in database service
+- Improved error resilience in content extraction
+- Enhanced message passing between content and background scripts
+
+## [0.6.0] - 2025-07-31
+
+### 🤖 AI Content Detection & Enhanced User Preferences
+
+### Added
+- **AI-Generated Content Detection**: Identify and flag AI-written posts
+  - Comprehensive detection patterns including writing style analysis
+  - Em-dash (—) usage detection as AI indicator
+  - Excessive emoji usage (3+) flagging
+  - Common AI phrases and patterns recognition
+  - Visual indicator (🤖) for AI-detected content with confidence percentage
+- **User Content Preferences**: Customize what content you value
+  - Custom prompt input for personal preferences
+  - Interest keywords configuration (comma-separated)
+  - Topics to avoid configuration
+  - Toggle for preferring original content over reshares
+  - Example templates for different user types
+- **AI Detection Scoring**: AI-generated content penalties
+  - 50% score reduction for high-confidence AI content (>70%)
+  - Originality score capped at 3/10 for AI-detected posts
+  - Visual badge appears on score display for transparency
+
+### Changed
+- **System Prompt Enhancement**: Shifted focus from ads to content quality
+  - Rebalanced to prioritize originality and information value
+  - Added detailed rating metrics explanations
+  - Included originality scoring guide (1-10 scale)
+  - Clear JSON format example with field descriptions
+- **Content Analysis Focus**: New evaluation criteria
+  - Original thought vs. reposts/reshares
+  - Substantive information vs. small talk
+  - Technical depth vs. surface-level content
+  - Educational value vs. self-promotion
+  - Human authenticity vs. AI patterns
+
+### Fixed
+- **JSON Response Format**: Clear structure for Ollama responses
+  - Added complete example with all required fields
+  - Explicit instructions for JSON-only responses
+  - Field type clarifications and valid value ranges
+
+### Technical Details
+- Enhanced ContentRating type with AI detection fields
+- Improved Ollama prompt engineering for better responses
+- Added user settings integration to content analysis
+
+## [0.5.2] - 2025-07-31
+
+### 🐛 Debug Features & LinkedIn Data Extraction Fixes
+
+### Added
+- **Debug Popup Feature**: View AI analysis details
+  - Debug icon (🐛) next to thumbs up/down buttons
+  - Shows Ollama prompt sent and AI response received
+  - Formatted timestamp with Europe/Berlin timezone
+  - Popup overlay with formatted JSON display
+  - Click outside to close functionality
+
+### Fixed
+- **LinkedIn Data Extraction**: Corrected empty/wrong data issues
+  - Updated selectors for new LinkedIn HTML structure (`.update-components-text`)
+  - Fixed author extraction from nested span structure
+  - Improved ID generation with content-based hashing
+  - Fixed timezone display (Europe/Berlin)
+  - Resolved empty content extraction issue
+
+### Changed
+- **Default View Mode**: Condensed view is now default
+  - Added configurable setting for expanded/condensed preference
+  - Condensed view shows only score and category icon
+  - User can change default in settings
+
+### Technical Details
+- Updated content extraction selectors for LinkedIn's current DOM
+- Enhanced debug data storage in PostDetector class
+- Improved error handling in data extraction
+
 ## [0.5.1] - 2025-07-31
 
 ### Fixed

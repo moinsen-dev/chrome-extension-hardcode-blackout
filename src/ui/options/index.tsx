@@ -55,6 +55,28 @@ const Options: React.FC = () => {
         topAuthors: Array<{ name: string; postCount: number; avgEngagement: number }>;
         contentTypeDistribution: Array<{ type: string; count: number }>;
         dailyStats: Array<{ date: string; postCount: number; avgScore: number }>;
+        // Enhanced analytics
+        authorCategoryAnalysis: Array<{
+            authorName: string;
+            authorId: string;
+            postCount: number;
+            categories: Array<{ category: string; count: number; percentage: number }>;
+            avgScore: number;
+            scoreRange: { min: number; max: number };
+            scoreDistribution: { excellent: number; good: number; fair: number; poor: number };
+            avgEngagement: number;
+            aiGeneratedCount: number;
+            aiGeneratedPercentage: number;
+            postingFrequency: string;
+            verified: boolean;
+        }>;
+        categoryOverview: Array<{ category: string; count: number; avgScore: number; topAuthors: string[] }>;
+        scoreRangeAnalysis: {
+            excellent: { count: number; authors: string[] };
+            good: { count: number; authors: string[] };
+            fair: { count: number; authors: string[] };
+            poor: { count: number; authors: string[] };
+        };
     } | null>(null);
     const [debugData, setDebugData] = useState<{
         errors: ExtensionError[];
@@ -65,6 +87,7 @@ const Options: React.FC = () => {
             last24Hours: number;
         };
     } | null>(null);
+    const [analyticsDebugData, setAnalyticsDebugData] = useState<any>(null);
 
     useEffect(() => {
         // Check if we're in setup mode
@@ -98,6 +121,7 @@ const Options: React.FC = () => {
         // Fetch debug data when debug tab is selected
         if (tabValue === 2) {
             fetchDebugData();
+            fetchAnalyticsDebugData();
         }
     }, [tabValue]);
 
@@ -112,7 +136,16 @@ const Options: React.FC = () => {
                     avgEngagement: response.stats.avgEngagement || 0,
                     topAuthors: response.stats.topAuthors || [],
                     contentTypeDistribution: response.stats.contentTypes || [],
-                    dailyStats: response.stats.dailyStats || []
+                    dailyStats: response.stats.dailyStats || [],
+                    // Enhanced analytics
+                    authorCategoryAnalysis: response.stats.authorCategoryAnalysis || [],
+                    categoryOverview: response.stats.categoryOverview || [],
+                    scoreRangeAnalysis: response.stats.scoreRangeAnalysis || {
+                        excellent: { count: 0, authors: [] },
+                        good: { count: 0, authors: [] },
+                        fair: { count: 0, authors: [] },
+                        poor: { count: 0, authors: [] }
+                    }
                 });
             }
         } catch (error) {
@@ -129,6 +162,39 @@ const Options: React.FC = () => {
             console.error('Failed to fetch debug data:', error);
             // Try to log this error too
             errorLogger.logError('options', 'fetch-debug-data', error as Error, 'medium');
+        }
+    };
+
+    const fetchAnalyticsDebugData = async () => {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'DEBUG_ANALYTICS' });
+            if (response.success) {
+                setAnalyticsDebugData(response.debugInfo);
+                console.log('Analytics Debug Data:', response.debugInfo);
+            } else {
+                console.error('Failed to fetch analytics debug data:', response.error);
+            }
+        } catch (error) {
+            console.error('Error fetching analytics debug data:', error);
+        }
+    };
+
+    const testAnalyticsInsert = async () => {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'TEST_ANALYTICS_INSERT' });
+            if (response.success) {
+                console.log('Test analytics insert successful:', response.result);
+                alert(`Test successful! Stats: ${response.stats.totalPosts} posts, ${response.stats.uniqueAuthors} authors`);
+                // Refresh debug data and analytics data
+                fetchAnalyticsDebugData();
+                fetchAnalyticsData();
+            } else {
+                console.error('Test analytics insert failed:', response.error);
+                alert(`Test failed: ${response.error}`);
+            }
+        } catch (error) {
+            console.error('Error testing analytics insert:', error);
+            alert(`Test error: ${error}`);
         }
     };
 
@@ -755,6 +821,166 @@ const Options: React.FC = () => {
                         </Paper>
                     )}
 
+                    {/* Enhanced Author Category Analysis */}
+                    {analyticsData && analyticsData.authorCategoryAnalysis.length > 0 && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>Author Category & Performance Analysis</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Detailed analysis of each author's content categories, quality scores, and engagement patterns
+                            </Typography>
+                            <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                                {analyticsData.authorCategoryAnalysis.slice(0, 15).map((author, index) => (
+                                    <Card key={index} sx={{ mb: 2, p: 2 }}>
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} md={4}>
+                                                <Box>
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+                                                        {author.authorName}
+                                                        {author.verified && <Typography component="span" sx={{ color: 'primary.main', ml: 0.5 }}>✓</Typography>}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {author.postCount} posts • {author.postingFrequency}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Avg Engagement: {author.avgEngagement}
+                                                    </Typography>
+                                                </Box>
+                                            </Grid>
+                                            <Grid item xs={12} md={4}>
+                                                <Typography variant="subtitle2" gutterBottom>Content Categories</Typography>
+                                                {author.categories.slice(0, 3).map((category, catIndex) => (
+                                                    <Box key={catIndex} sx={{ mb: 0.5 }}>
+                                                        <Typography variant="body2">
+                                                            {category.category}: {category.count} ({category.percentage}%)
+                                                        </Typography>
+                                                    </Box>
+                                                ))}
+                                            </Grid>
+                                            <Grid item xs={12} md={4}>
+                                                <Typography variant="subtitle2" gutterBottom>Quality Metrics</Typography>
+                                                <Typography variant="body2">
+                                                    Avg Score: {author.avgScore}/100 (Range: {author.scoreRange.min}-{author.scoreRange.max})
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    AI Generated: {author.aiGeneratedPercentage}% ({author.aiGeneratedCount} posts)
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                                                    {author.scoreDistribution.excellent > 0 && (
+                                                        <Typography variant="caption" sx={{ bgcolor: 'success.light', px: 1, borderRadius: 1 }}>
+                                                            Excellent: {author.scoreDistribution.excellent}
+                                                        </Typography>
+                                                    )}
+                                                    {author.scoreDistribution.good > 0 && (
+                                                        <Typography variant="caption" sx={{ bgcolor: 'info.light', px: 1, borderRadius: 1 }}>
+                                                            Good: {author.scoreDistribution.good}
+                                                        </Typography>
+                                                    )}
+                                                    {author.scoreDistribution.fair > 0 && (
+                                                        <Typography variant="caption" sx={{ bgcolor: 'warning.light', px: 1, borderRadius: 1 }}>
+                                                            Fair: {author.scoreDistribution.fair}
+                                                        </Typography>
+                                                    )}
+                                                    {author.scoreDistribution.poor > 0 && (
+                                                        <Typography variant="caption" sx={{ bgcolor: 'error.light', px: 1, borderRadius: 1 }}>
+                                                            Poor: {author.scoreDistribution.poor}
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Card>
+                                ))}
+                            </Box>
+                        </Paper>
+                    )}
+
+                    {/* Category Overview */}
+                    {analyticsData && analyticsData.categoryOverview.length > 0 && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>Content Category Overview</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Distribution of content types and their performance
+                            </Typography>
+                            <Grid container spacing={2}>
+                                {analyticsData.categoryOverview.map((category, index) => (
+                                    <Grid item xs={12} md={6} lg={4} key={index}>
+                                        <Card sx={{ p: 2, height: '100%' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
+                                                {category.category}
+                                            </Typography>
+                                            <Typography variant="h4" color="primary" sx={{ my: 1 }}>
+                                                {category.count}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Avg Score: {category.avgScore}/100
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                                Top Authors: {category.topAuthors.slice(0, 2).join(', ')}
+                                                {category.topAuthors.length > 2 && ` +${category.topAuthors.length - 2} more`}
+                                            </Typography>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Paper>
+                    )}
+
+                    {/* Score Range Analysis */}
+                    {analyticsData && analyticsData.scoreRangeAnalysis && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>Content Quality Distribution</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                How content scores are distributed across quality ranges
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6} md={3}>
+                                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light' }}>
+                                        <Typography variant="h4" color="success.dark">
+                                            {analyticsData.scoreRangeAnalysis.excellent.count}
+                                        </Typography>
+                                        <Typography variant="subtitle2">Excellent (80-100)</Typography>
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                                            {analyticsData.scoreRangeAnalysis.excellent.authors.slice(0, 2).join(', ')}
+                                        </Typography>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: 'info.light' }}>
+                                        <Typography variant="h4" color="info.dark">
+                                            {analyticsData.scoreRangeAnalysis.good.count}
+                                        </Typography>
+                                        <Typography variant="subtitle2">Good (60-79)</Typography>
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                                            {analyticsData.scoreRangeAnalysis.good.authors.slice(0, 2).join(', ')}
+                                        </Typography>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light' }}>
+                                        <Typography variant="h4" color="warning.dark">
+                                            {analyticsData.scoreRangeAnalysis.fair.count}
+                                        </Typography>
+                                        <Typography variant="subtitle2">Fair (40-59)</Typography>
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                                            {analyticsData.scoreRangeAnalysis.fair.authors.slice(0, 2).join(', ')}
+                                        </Typography>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={6} md={3}>
+                                    <Card sx={{ p: 2, textAlign: 'center', bgcolor: 'error.light' }}>
+                                        <Typography variant="h4" color="error.dark">
+                                            {analyticsData.scoreRangeAnalysis.poor.count}
+                                        </Typography>
+                                        <Typography variant="subtitle2">Poor (0-39)</Typography>
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                                            {analyticsData.scoreRangeAnalysis.poor.authors.slice(0, 2).join(', ')}
+                                        </Typography>
+                                    </Card>
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    )}
+
                     <Paper sx={{ p: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Typography variant="h6">Export Analytics Data</Typography>
@@ -926,6 +1152,133 @@ const Options: React.FC = () => {
                             </Typography>
                         </Paper>
                     )}
+
+                    {/* Analytics Debug Section */}
+                    <Paper sx={{ p: 3, mt: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" gutterBottom>Feed Analytics Debug</Typography>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button variant="outlined" size="small" onClick={fetchAnalyticsDebugData}>
+                                    Refresh Debug Data
+                                </Button>
+                                <Button variant="contained" size="small" color="primary" onClick={testAnalyticsInsert}>
+                                    Test Insert
+                                </Button>
+                            </Box>
+                        </Box>
+                        
+                        {analyticsDebugData ? (
+                            <>
+                                {/* Database Status */}
+                                <Card sx={{ mb: 2, p: 2 }}>
+                                    <Typography variant="subtitle1" gutterBottom>Database Status</Typography>
+                                    <Typography variant="body2" color={analyticsDebugData.databaseStatus === 'initialized' ? 'success.main' : 'error.main'}>
+                                        Status: {analyticsDebugData.databaseStatus}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        Last Check: {new Date(analyticsDebugData.timestamp).toLocaleString()}
+                                    </Typography>
+                                </Card>
+
+                                {/* Storage Information */}
+                                <Card sx={{ mb: 2, p: 2 }}>
+                                    <Typography variant="subtitle1" gutterBottom>Chrome Storage</Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2">
+                                                Database Size: {analyticsDebugData.storageInfo.feedDatabaseSize} bytes
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                Has Database: {analyticsDebugData.storageInfo.hasFeedDatabase ? '✅' : '❌'}
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2">
+                                                Processed Posts: {analyticsDebugData.storageInfo.processedPostsCount}
+                                            </Typography>
+                                            <Typography variant="body2">
+                                                Analytics Enabled: {analyticsDebugData.storageInfo.analyticsEnabled ? '✅' : '❌'}
+                                            </Typography>
+                                        </Grid>
+                                    </Grid>
+                                </Card>
+
+                                {/* Database Tables */}
+                                {analyticsDebugData.tableInfo && (
+                                    <Card sx={{ mb: 2, p: 2 }}>
+                                        <Typography variant="subtitle1" gutterBottom>Database Tables</Typography>
+                                        {analyticsDebugData.tableInfo.tables && analyticsDebugData.tableInfo.tables.length > 0 ? (
+                                            <Box>
+                                                <Typography variant="body2" gutterBottom>Tables: {analyticsDebugData.tableInfo.tables.join(', ')}</Typography>
+                                                <Typography variant="body2" gutterBottom>Record Counts:</Typography>
+                                                {Object.entries(analyticsDebugData.tableInfo.counts || {}).map(([table, count]) => (
+                                                    <Typography key={table} variant="body2" sx={{ ml: 2 }}>
+                                                        {table}: {String(count)}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="body2" color="error">No tables found or database not initialized</Typography>
+                                        )}
+                                    </Card>
+                                )}
+
+                                {/* Recent Items */}
+                                {analyticsDebugData.tableInfo?.recentItems && analyticsDebugData.tableInfo.recentItems.length > 0 && (
+                                    <Card sx={{ mb: 2, p: 2 }}>
+                                        <Typography variant="subtitle1" gutterBottom>Recent Feed Items</Typography>
+                                        <TableContainer>
+                                            <Table size="small">
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell>ID</TableCell>
+                                                        <TableCell>Content</TableCell>
+                                                        <TableCell>Score</TableCell>
+                                                        <TableCell>Category</TableCell>
+                                                        <TableCell>Captured</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {analyticsDebugData.tableInfo.recentItems.slice(0, 5).map((item: any, index: number) => (
+                                                        <TableRow key={index}>
+                                                            <TableCell sx={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {item.id}
+                                                            </TableCell>
+                                                            <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {item.content}
+                                                            </TableCell>
+                                                            <TableCell>{item.score || 'N/A'}</TableCell>
+                                                            <TableCell>{item.category || 'N/A'}</TableCell>
+                                                            <TableCell>{item.capturedAt ? new Date(item.capturedAt).toLocaleString() : 'N/A'}</TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </Card>
+                                )}
+
+                                {/* Debug Instructions */}
+                                <Card sx={{ p: 2, bgcolor: 'info.light' }}>
+                                    <Typography variant="subtitle1" gutterBottom>🔍 Debug Instructions</Typography>
+                                    <Typography variant="body2" gutterBottom>
+                                        If analytics are not working, check the following:
+                                    </Typography>
+                                    <Box component="div">
+                                        <Typography variant="body2">1. Database Status should be "initialized"</Typography>
+                                        <Typography variant="body2">2. Record counts should be &gt; 0 for feed_items and authors</Typography>
+                                        <Typography variant="body2">3. Check browser console on LinkedIn for feed processing logs</Typography>
+                                        <Typography variant="body2">4. Recent items should show actual captured posts</Typography>
+                                        <Typography variant="body2">5. Open background script console (chrome://extensions) for detailed logs</Typography>
+                                    </Box>
+                                </Card>
+                            </>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary">
+                                Click "Refresh Debug Data" to load analytics debugging information
+                            </Typography>
+                        )}
+                    </Paper>
                 </Box>
             )}
 

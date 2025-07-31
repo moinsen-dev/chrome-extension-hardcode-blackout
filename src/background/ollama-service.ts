@@ -157,6 +157,10 @@ Analyze the content for signs of AI generation. Look for:
 - Hedging language and lack of strong opinions
 - Perfect grammar but lacking authentic voice
 - Common AI phrases: "it's important to note", "in conclusion", "furthermore", "additionally"
+- Use of em-dash (—) instead of regular dash (-) or comma
+- Excessive emojis (3+ emojis in a single post)
+- Overly enthusiastic tone with multiple exclamation marks
+- Pattern of "Here's" or "Let's" at the beginning of sentences
 
 If content appears AI-generated, this should SIGNIFICANTLY impact the originality score (max 3/10).
 
@@ -195,7 +199,8 @@ IMPORTANT DISTINCTIONS:
 - Product reviews by regular users = "personal" or relevant category (not "advertisement")
 - Educational tutorials teaching skills = "education"
 
-Respond ONLY with valid JSON in this exact format:
+Respond ONLY with valid JSON matching this EXACT structure:
+
 {
   "contentQuality": {
     "writingQuality": 7,
@@ -219,7 +224,15 @@ Respond ONLY with valid JSON in this exact format:
   },
   "isAIGenerated": false,
   "aiConfidence": 0.2
-}`
+}
+
+Where:
+- All quality scores are 1-10 (higher is better except toxicity/manipulation)
+- category must be: personal, business, tech, finance, news, entertainment, education, advertisement, promotion, politics, or other
+- confidence and aiConfidence are 0-1 (decimal values)
+- isAIGenerated is boolean (true/false)
+
+CRITICAL: Return ONLY the JSON object, no additional text or explanation.`
             };
 
             // Chrome extension compatible fetch - no explicit timeout needed as Chrome handles it
@@ -377,7 +390,7 @@ CRITICAL CLASSIFICATION RULES:
 
 PAY SPECIAL ATTENTION to platform signals in the context - if marked as sponsored/promoted, classify accordingly.
 
-Provide ratings in JSON format as specified.`;
+RESPONSE FORMAT: You MUST respond with ONLY a JSON object matching the exact structure shown above. Do not include any explanatory text before or after the JSON. The response must be valid, parseable JSON with all required fields.`;
     }
 
     private async parseOllamaResponse(response: string): Promise<ContentRating> {

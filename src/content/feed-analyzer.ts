@@ -54,12 +54,19 @@ export class FeedAnalyzer {
   }
 
   startObserving(): void {
-    if (this.isObserving) return;
+    if (this.isObserving) {
+      console.log('Feed analyzer already observing');
+      return;
+    }
 
+    console.log('Feed analyzer starting to observe...');
     this.waitForFeed().then((feedContainer) => {
       console.log('LinkedIn feed detected, starting feed analysis');
       this.observeFeed(feedContainer);
       this.isObserving = true;
+      console.log('Feed analyzer is now observing LinkedIn feed');
+    }).catch((error) => {
+      console.error('Failed to start feed observation:', error);
     });
   }
 
@@ -72,12 +79,23 @@ export class FeedAnalyzer {
   }
 
   private async waitForFeed(): Promise<Element> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 30; // Wait up to 30 seconds
+      
       const checkInterval = setInterval(() => {
+        attempts++;
+        console.log(`Looking for LinkedIn feed container (attempt ${attempts}/${maxAttempts})`);
+        
         const feedContainer = document.querySelector('div[role="main"] .scaffold-finite-scroll__content');
         if (feedContainer) {
+          console.log('LinkedIn feed container found:', feedContainer);
           clearInterval(checkInterval);
           resolve(feedContainer);
+        } else if (attempts >= maxAttempts) {
+          console.error('LinkedIn feed container not found after 30 seconds');
+          clearInterval(checkInterval);
+          reject(new Error('Feed container not found'));
         }
       }, 1000);
     });
@@ -122,10 +140,17 @@ export class FeedAnalyzer {
   private async processFeedItem(element: Element): Promise<void> {
     try {
       const postId = this.extractPostId(element);
-      if (!postId || this.processedPosts.has(postId)) {
+      if (!postId) {
+        console.warn('Could not extract post ID from element:', element);
+        return;
+      }
+      
+      if (this.processedPosts.has(postId)) {
+        console.log(`Post ${postId} already processed, skipping`);
         return;
       }
 
+      console.log(`Processing new feed item: ${postId}`);
       this.processedPosts.add(postId);
       await this.saveProcessedPosts();
 

@@ -389,7 +389,13 @@ chrome.runtime.onMessage.addListener(
     if (message.type === 'FEED_ITEM_DETECTED') {
       (async () => {
         try {
-          console.log('FEED_ITEM_DETECTED received:', message.data?.id);
+          console.log('🔍 FEED_ITEM_DETECTED received:', {
+            id: message.data?.id,
+            author: message.data?.author?.name,
+            contentLength: message.data?.content?.length,
+            postType: message.data?.postType,
+            timestamp: new Date().toISOString()
+          });
           
           // Check if analytics are enabled
           const { settings } = await chrome.storage.local.get('settings');
@@ -400,9 +406,83 @@ chrome.runtime.onMessage.addListener(
             return;
           }
           
-          // Store the feed item
-          const result = await databaseService.insertFeedItem(message.data);
-          console.log('Feed item stored:', result);
+          // Enhance feed data with AI analysis
+          let enhancedFeedData = { ...message.data };
+          
+          try {
+            // Create a Post object for AI analysis
+            const post: Post = {
+              id: message.data.id,
+              platform: 'linkedin',
+              content: message.data.content,
+              author: message.data.author.name,
+              timestamp: Date.now(),
+              contextualInfo: {
+                authorProfile: message.data.author.headline,
+                postType: message.data.postType,
+                hasMedia: message.data.hasMedia,
+                hasLinks: false // Could be enhanced
+              }
+            };
+
+            // Get AI analysis if Ollama is available
+            if (ollamaService.isOllamaAvailable()) {
+              console.log('Getting AI analysis for feed item:', message.data.id);
+              const modelName = settings?.modelSettings?.ollamaModel || 'llama3.2';
+              
+              // Add timeout for AI analysis
+              const analysisPromise = ollamaService.analyzeContent(post, modelName, settings?.settings);
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error('AI analysis timeout')), 15000); // 15 second timeout
+              });
+              
+              const rating = await Promise.race([analysisPromise, timeoutPromise]);
+              
+              // Add AI analysis to feed data
+              enhancedFeedData.overallScore = rating.overallScore;
+              enhancedFeedData.contentCategory = rating.contentType?.category;
+              enhancedFeedData.categoryConfidence = rating.contentType?.confidence;
+              enhancedFeedData.contentQualityScore = Object.values(rating.contentQuality).reduce((a, b) => a + b, 0) / 4;
+              enhancedFeedData.emotionalImpactScore = Object.values(rating.emotionalImpact).reduce((a, b) => a + b, 0) / 3;
+              enhancedFeedData.userPreferenceScore = Object.values(rating.userPreferences).reduce((a, b) => a + b, 0) / 3;
+              enhancedFeedData.isAIGenerated = rating.isAIGenerated;
+              enhancedFeedData.aiConfidence = rating.aiConfidence;
+              
+              console.log('AI analysis completed for feed item:', {
+                id: message.data.id,
+                score: rating.overallScore,
+                category: rating.contentType?.category
+              });
+            } else {
+              console.log('Ollama not available, storing feed item without AI analysis');
+            }
+          } catch (aiError) {
+            console.warn('AI analysis failed for feed item, storing without analysis:', aiError);
+            // Continue without AI analysis - we still want to store the basic feed data
+          }
+          
+          // Store the feed item (with or without AI analysis)
+          console.log('📊 Storing feed item in database:', {
+            id: enhancedFeedData.id,
+            hasAIAnalysis: !!enhancedFeedData.overallScore,
+            score: enhancedFeedData.overallScore,
+            category: enhancedFeedData.contentCategory
+          });
+          
+          const result = await databaseService.processFeedItem(enhancedFeedData);
+          console.log('✅ Feed item stored successfully:', result);
+          
+          // Verify storage by getting recent statistics
+          try {
+            const stats = await databaseService.getStatistics();
+            console.log('📈 Current database stats after insert:', {
+              totalPosts: stats.totalPosts,
+              uniqueAuthors: stats.uniqueAuthors,
+              lastUpdate: new Date().toISOString()
+            });
+          } catch (statsError) {
+            console.error('⚠️ Could not get stats after insert:', statsError);
+          }
           
           sendResponse({ success: true, result });
         } catch (error) {
@@ -502,6 +582,139 @@ chrome.runtime.onMessage.addListener(
       console.log('Icon state update:', message.active ? 'active' : 'inactive');
       sendResponse({ success: true });
       return false; // Synchronous response
+    }
+
+    // Handle OPEN_OPTIONS message
+    if (message.type === 'OPEN_OPTIONS') {
+      chrome.runtime.openOptionsPage();
+      sendResponse({ success: true });
+      return false; // Synchronous response
+    }
+
+    // Test Analytics with Sample Data
+    if (message.type === 'TEST_ANALYTICS_INSERT') {
+      (async () => {
+        try {
+          console.log('🧪 TEST_ANALYTICS_INSERT: Creating sample feed item...');
+          
+          const sampleFeedItem = {
+            id: `test-${Date.now()}`,
+            author: {
+              id: 'test-author-1',
+              name: 'Test Author',
+              headline: 'Test Headline for Debug',
+              profileUrl: 'https://linkedin.com/in/test-author',
+              verified: false
+            },
+            content: 'This is a test post created for debugging analytics. It should appear in the analytics dashboard.',
+            postType: 'post',
+            reactionCount: 5,
+            commentCount: 2,
+            repostCount: 1,
+            reactionTypes: ['like', 'celebrate'],
+            hasMedia: false,
+            timestamp: new Date().toISOString(),
+            // Add AI analysis data for testing
+            overallScore: 75,
+            contentCategory: 'business',
+            categoryConfidence: 0.85,
+            contentQualityScore: 7.5,
+            emotionalImpactScore: 6.2,
+            userPreferenceScore: 8.1,
+            isAIGenerated: false,
+            aiConfidence: 0.1
+          };
+
+          const result = await databaseService.processFeedItem(sampleFeedItem);
+          console.log('🧪 Test feed item processed:', result);
+          
+          // Get updated stats
+          const stats = await databaseService.getStatistics();
+          console.log('🧪 Updated stats after test insert:', stats);
+          
+          sendResponse({ success: true, result, stats });
+        } catch (error) {
+          console.error('🧪 TEST_ANALYTICS_INSERT error:', error);
+          sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        }
+      })();
+      return true;
+    }
+
+    // Reset Database (for debugging)
+    if (message.type === 'RESET_DATABASE') {
+      (async () => {
+        try {
+          console.log('🔧 RESET_DATABASE: Clearing database...');
+          
+          // Clear Chrome storage
+          await chrome.storage.local.remove(['feedDatabase', 'processedPostIds']);
+          
+          // Reinitialize database
+          await databaseService.initialize();
+          
+          // Get new stats
+          const stats = await databaseService.getStatistics();
+          
+          console.log('🔧 Database reset complete. New stats:', stats);
+          sendResponse({ success: true, stats });
+        } catch (error) {
+          console.error('🔧 RESET_DATABASE error:', error);
+          sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        }
+      })();
+      return true;
+    }
+
+    // Debug Analytics Flow
+    if (message.type === 'DEBUG_ANALYTICS') {
+      (async () => {
+        try {
+          const debugInfo = {
+            timestamp: new Date().toISOString(),
+            databaseStatus: 'unknown',
+            tableInfo: [],
+            recentInserts: [],
+            storageInfo: {},
+            feedProcessingStats: {}
+          };
+
+          // Test database connection
+          try {
+            await databaseService.initialize();
+            debugInfo.databaseStatus = 'initialized';
+            
+            // Get table info
+            const tables = await databaseService.getDebugInfo();
+            debugInfo.tableInfo = tables;
+            
+            console.log('DEBUG_ANALYTICS: Database tables:', tables);
+          } catch (dbError) {
+            debugInfo.databaseStatus = `error: ${dbError instanceof Error ? dbError.message : String(dbError)}`;
+            console.error('DEBUG_ANALYTICS: Database error:', dbError);
+          }
+
+          // Check Chrome storage
+          try {
+            const storage = await chrome.storage.local.get(['feedDatabase', 'processedPostIds', 'settings']);
+            debugInfo.storageInfo = {
+              hasFeedDatabase: !!storage.feedDatabase,
+              feedDatabaseSize: storage.feedDatabase ? storage.feedDatabase.length : 0,
+              processedPostsCount: storage.processedPostIds ? storage.processedPostIds.length : 0,
+              analyticsEnabled: storage.settings?.analytics?.enableFeedAnalytics ?? 'unknown'
+            };
+            console.log('DEBUG_ANALYTICS: Storage info:', debugInfo.storageInfo);
+          } catch (storageError) {
+            console.error('DEBUG_ANALYTICS: Storage error:', storageError);
+          }
+
+          sendResponse({ success: true, debugInfo });
+        } catch (error) {
+          console.error('DEBUG_ANALYTICS error:', error);
+          sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
+        }
+      })();
+      return true;
     }
 
     return true;
